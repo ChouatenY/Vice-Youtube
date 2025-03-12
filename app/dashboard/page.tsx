@@ -26,6 +26,7 @@ export default function Dashboard() {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
   const [transcript, setTranscript] = useState<TranscriptEntry[] | null>(null);
+  const [transcriptText, setTranscriptText] = useState<string>('');
   const [analysis, setAnalysis] = useState<string | null>(null);
   const [videoId, setVideoId] = useState<string | null>(null);
   const [showAnalysis, setShowAnalysis] = useState(false);
@@ -68,6 +69,7 @@ export default function Dashboard() {
       setError(null);
       setAnalysis(null);
       setTranscript(null);
+      setTranscriptText('');
       setShowAnalysis(false);
       setCurrentStep(1); // Validating URL
 
@@ -105,8 +107,15 @@ export default function Dashboard() {
         throw new Error('No transcript available for this video');
       }
 
-      // Store transcript and display it
+      // Store transcript and create transcript text
       setTranscript(data.transcript);
+      
+      // Create a plain text version of the transcript
+      const plainText = data.transcript
+        .map((entry: { text: string }) => entry.text)
+        .join(' ');
+      
+      setTranscriptText(plainText);
       setIsLoading(false);
       
       // Analysis will now be triggered by the "Confirm Analysis" button
@@ -118,7 +127,7 @@ export default function Dashboard() {
   };
 
   const handleConfirmAnalysis = async () => {
-    if (!transcript) return;
+    if (!transcriptText) return;
     
     try {
       // Start AI analysis
@@ -131,7 +140,7 @@ export default function Dashboard() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ transcript }),
+        body: JSON.stringify({ transcriptText }),
       });
 
       if (!analysisResponse.ok) {
@@ -155,6 +164,7 @@ export default function Dashboard() {
     setCurrentStep(0);
     setError(null);
     setTranscript(null);
+    setTranscriptText('');
     setAnalysis(null);
     setVideoId(null);
     setShowAnalysis(false);

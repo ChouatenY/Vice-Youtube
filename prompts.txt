@@ -141,3 +141,14 @@ import {Innertube} from 'youtubei.js/web';
 		}
 	};
 
+
+
+
+
+PROMPT 6:
+
+I want to implement additional functionality, where you will first get the transcription, 
+save it into variable (i dont want the transcription from api being directly analyzed, first save it to variable)
+ -> you will display it to user on the results (display like 5 rows of the transcript) and make it scrollable), 
+ and below will be button to "Confirm analysis" , and if clicked, that text will be sent into AI analysis and it will
+  continue with the process of analyzing that text, not analyzing directly the youtube transcript got from the API
