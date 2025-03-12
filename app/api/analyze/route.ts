@@ -2,14 +2,19 @@ import { NextRequest, NextResponse } from 'next/server';
 
 export async function POST(request: NextRequest) {
   try {
-    const { transcriptText } = await request.json();
+    const { transcript } = await request.json();
     
-    if (!transcriptText || transcriptText.trim() === '') {
+    if (!transcript || transcript.length === 0) {
       return NextResponse.json(
-        { error: 'Transcript text is required' },
+        { error: 'Transcript is required' },
         { status: 400 }
       );
     }
+
+    // Prepare the transcript text for analysis
+    const transcriptText = transcript
+      .map((entry: { text: string }) => entry.text)
+      .join(' ');
 
     // Use DeepSeek AI API for analysis
     const response = await fetch('https://api.deepseek.com/v1/chat/completions', {

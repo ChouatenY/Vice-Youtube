@@ -26,12 +26,10 @@ export default function Dashboard() {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
   const [transcript, setTranscript] = useState<TranscriptEntry[] | null>(null);
-  const [transcriptText, setTranscriptText] = useState<string>('');
   const [analysis, setAnalysis] = useState<string | null>(null);
   const [videoId, setVideoId] = useState<string | null>(null);
-  const [showAnalysis, setShowAnalysis] = useState(false);
 
-  const totalSteps = 5;
+  const totalSteps = 5; // Added one more step for AI analysis
 
   const isSubscribed = userData?.subscription?.status === 'active';
 
@@ -69,8 +67,6 @@ export default function Dashboard() {
       setError(null);
       setAnalysis(null);
       setTranscript(null);
-      setTranscriptText('');
-      setShowAnalysis(false);
       setCurrentStep(1); // Validating URL
 
       // Extract video ID
@@ -107,54 +103,40 @@ export default function Dashboard() {
         throw new Error('No transcript available for this video');
       }
 
-      // Store transcript and create transcript text
+      // Store transcript but don't display it
       setTranscript(data.transcript);
-      
-      // Create a plain text version of the transcript
-      const plainText = data.transcript
-        .map((entry: { text: string }) => entry.text)
-        .join(' ');
-      
-      setTranscriptText(plainText);
       setIsLoading(false);
       
-      // Analysis will now be triggered by the "Confirm Analysis" button
+      // Start AI analysis
+      setCurrentStep(5); // Analyzing transcript
+      setIsAnalyzing(true);
+      
+      try {
+        const analysisResponse = await fetch('/api/analyze', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ transcript: data.transcript }),
+        });
+
+        if (!analysisResponse.ok) {
+          const errorData = await analysisResponse.json();
+          throw new Error(errorData.error || 'Failed to analyze transcript');
+        }
+
+        const analysisData = await analysisResponse.json();
+        setAnalysis(analysisData.analysis);
+      } catch (analysisError) {
+        console.error('Analysis error:', analysisError);
+        setError(analysisError instanceof Error ? analysisError.message : 'Failed to analyze transcript');
+      } finally {
+        setIsAnalyzing(false);
+      }
     } catch (err) {
       setIsLoading(false);
       setIsAnalyzing(false);
       setError(err instanceof Error ? err.message : 'An unknown error occurred');
-    }
-  };
-
-  const handleConfirmAnalysis = async () => {
-    if (!transcriptText) return;
-    
-    try {
-      // Start AI analysis
-      setCurrentStep(5); // Analyzing transcript
-      setIsAnalyzing(true);
-      setShowAnalysis(true);
-      
-      const analysisResponse = await fetch('/api/analyze', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ transcriptText }),
-      });
-
-      if (!analysisResponse.ok) {
-        const errorData = await analysisResponse.json();
-        throw new Error(errorData.error || 'Failed to analyze transcript');
-      }
-
-      const analysisData = await analysisResponse.json();
-      setAnalysis(analysisData.analysis);
-    } catch (analysisError) {
-      console.error('Analysis error:', analysisError);
-      setError(analysisError instanceof Error ? analysisError.message : 'Failed to analyze transcript');
-    } finally {
-      setIsAnalyzing(false);
     }
   };
 
@@ -164,10 +146,8 @@ export default function Dashboard() {
     setCurrentStep(0);
     setError(null);
     setTranscript(null);
-    setTranscriptText('');
     setAnalysis(null);
     setVideoId(null);
-    setShowAnalysis(false);
   };
 
   if (!isSubscribed) {
@@ -214,17 +194,13 @@ export default function Dashboard() {
               <>
                 <TranscriptResults 
                   videoId={videoId} 
-                  onReset={handleReset}
-                  transcript={transcript}
-                  onConfirmAnalysis={handleConfirmAnalysis}
+                  onReset={handleReset} 
                 />
-                {showAnalysis && (
-                  <AnalysisResults 
-                    analysis={analysis} 
-                    isLoading={isAnalyzing}
-                    videoId={videoId}
-                  />
-                )}
+                <AnalysisResults 
+                  analysis={analysis} 
+                  isLoading={isAnalyzing}
+                  videoId={videoId}
+                />
               </>
             )}
 

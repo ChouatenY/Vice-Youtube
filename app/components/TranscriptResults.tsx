@@ -1,24 +1,9 @@
-import { useState } from 'react';
-
-interface TranscriptEntry {
-  text: string;
-  start: number;
-  duration: number;
-}
-
 interface TranscriptResultsProps {
   videoId: string;
   onReset: () => void;
-  transcript: TranscriptEntry[] | null;
-  onConfirmAnalysis: () => void;
 }
 
-export default function TranscriptResults({ 
-  videoId, 
-  onReset, 
-  transcript, 
-  onConfirmAnalysis 
-}: TranscriptResultsProps) {
+export default function TranscriptResults({ videoId, onReset }: TranscriptResultsProps) {
   return (
     <div className="w-full max-w-4xl mx-auto mt-8 space-y-6">
       <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
@@ -43,36 +28,6 @@ export default function TranscriptResults({
           className="rounded-lg shadow-lg"
         ></iframe>
       </div>
-
-      {transcript && (
-        <div className="mt-8">
-          <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4">Transcript Preview</h3>
-          <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4 h-64 overflow-y-auto">
-            {transcript.slice(0, 20).map((entry, index) => (
-              <p key={index} className="mb-2 text-gray-700 dark:text-gray-300">
-                <span className="text-gray-500 dark:text-gray-400 text-sm">
-                  {Math.floor(entry.start / 60)}:{Math.floor(entry.start % 60).toString().padStart(2, '0')}
-                </span>
-                {' '}{entry.text}
-              </p>
-            ))}
-            {transcript.length > 20 && (
-              <p className="text-gray-500 dark:text-gray-400 italic mt-4">
-                (Showing first 20 entries of {transcript.length} total)
-              </p>
-            )}
-          </div>
-          
-          <div className="mt-6 flex justify-center">
-            <button
-              onClick={onConfirmAnalysis}
-              className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors"
-            >
-              Confirm Analysis
-            </button>
-          </div>
-        </div>
-      )}
     </div>
   );
 } 
