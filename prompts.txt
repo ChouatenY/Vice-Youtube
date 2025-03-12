@@ -1,0 +1,143 @@
+PROMPT 1:
+
+Create a modern web application using Next.js that:
+1. Takes a YouTube video URL as input
+2. Extracts the transcript using youtube-transcript API
+3. Presents a clean, user-friendly interface
+
+Core Features:
+   - YouTube URL input field with validation
+   - Loading state with progress indicator
+   - Analysis results display
+   - Error handling for: Invalid YouTube URLs, Videos without transcripts, API failures
+
+UI Components:
+1. Main form with:
+   - YouTube URL input with YouTube icon
+   - Submit button with loading state
+   - Progress indicator during processing
+
+2. Results display with:
+   - Video analysis section
+   - Reset button to analyze another video
+   - Clean, responsive layout
+
+Styling:
+1. Use Tailwind CSS for styling with:
+   - Responsive design (mobile-first)
+   - Modern, clean interface
+   - Loading animations
+   - Progress indicators
+   - Dark colors, with red details, but mainly focus on ShadCN like UI with neutral colors
+
+Code:
+- Use TypeScript for type safety
+- Implement proper error handling
+- Add loading states and user feedback
+- Keep the UI clean and minimal
+- Focus on user experience
+
+
+
+
+
+
+
+PROMPT 2:
+
+- display a section with a text transcript from the input video
+- make sure in api/transript/route.ts, you are using { YoutubeTranscript } from 'youtube-transcript' for this, 
+not anything else
+- make the colors as Shadcn - black/white, buttons should keep the white color, details red
+- currently its saying yt url is not valid, there is example of valid yt url:
+https://www.youtube.com/watch?v=pcC4Dr6Wj2Q&t=1s
+
+What i expect:
+I will input a youtube video url, i will click analyze, it will display me the loading/processing
+status, after its done, it will display the section with the text from the video transcript
+
+
+
+
+
+
+
+PROMPT 3:
+
+- I want to extend my existing functionality where an AI analysis is performed on the transcribed
+text of the input video 
+- reuse AI API KEY that i have in my .env file, its DeepSeek AI API key, implement a functionality where
+AI will analyze the transcript text that you got from the video
+- never display the transcribed text anywhere, display just the analyzed text, when its loading the text,
+display a skeleton of it
+- After AI generates the video summary, show that text in a professional and easy-to-read way. 
+Make everything feel simple, bright, and friendly, and good spacing. 
+The final look should feel modern and polished.
+
+
+
+
+
+
+
+
+
+
+PROMPT 4:
+
+- Once the AI analysis is complete and the result is displayed in a component, 
+I want to add a "Save" button that will allow users to save this analysis to the database.
+
+Define a Prisma model for storing AI analysis results.
+The result should be stored in JSON format.
+Store the analysis in the database via Prisma.
+Also, create a model for User, and assign the analysis, to the current user
+
+Please, use CLERK AUTH, in case you will be implementing auth also
+
+Frontend UI
+Add a "Save" button below the AI analysis result
+When clicked, it should trigger the API request to save the analysis
+Show loading and success states on the button
+
+On the main page, below the video input box, create a visually appealing section to display all 
+previously saved analyses. Fetch these saved analyses from the database and present them in an elegant, 
+structured layout. Each analysis should be displayed as a clickable card or list item, ensuring clear readability.
+
+When a user clicks on an analysis, open a well-designed modal that dynamically loads and presents 
+the full analysis in a user-friendly format. The modal should have a smooth transition effect and an 
+option to close it easily. Ensure the UI is modern, responsive, and maintains a seamless user experience.
+
+Additionally, include an "Edit" button next to the displayed analysis. 
+When the user clicks on "Edit", the text should become editable. After making changes, the user can 
+click a "Save" button to update and store the edited analysis. Ensure a smooth user experience with clear 
+visual cues, such as inline editing or a dedicated input field, and provide feedback upon saving.
+Also add a delete button to delete the analysis.
+
+
+
+
+
+PROMPT 5:
+
+Please, I want to use a different package for getting the transcript for youtube video link that will user input into the app
+-change youtube-transcript package for a youtubei.js/web package, code snippet below:
+
+import {Innertube} from 'youtubei.js/web';
+
+	const youtube = await Innertube.create({
+		lang: 'en',
+		location: 'US',
+		retrieve_player: false,
+	});
+
+	const fetchTranscript = async (): Promise<string[]> => {
+		try {
+			const transcriptData = await info.getTranscript();
+			return transcriptData.transcript.content.body.initial_segments.map((segment) => segment.snippet.text)
+		} catch (error) {
+			console.error('Error fetching transcript:', error);
+			throw error;
+		}
+	};
+
