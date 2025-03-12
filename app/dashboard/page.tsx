@@ -28,8 +28,9 @@ export default function Dashboard() {
   const [transcript, setTranscript] = useState<TranscriptEntry[] | null>(null);
   const [analysis, setAnalysis] = useState<string | null>(null);
   const [videoId, setVideoId] = useState<string | null>(null);
+  const [showAnalysis, setShowAnalysis] = useState(false);
 
-  const totalSteps = 5; // Added one more step for AI analysis
+  const totalSteps = 5;
 
   const isSubscribed = userData?.subscription?.status === 'active';
 
@@ -67,6 +68,7 @@ export default function Dashboard() {
       setError(null);
       setAnalysis(null);
       setTranscript(null);
+      setShowAnalysis(false);
       setCurrentStep(1); // Validating URL
 
       // Extract video ID
@@ -103,40 +105,47 @@ export default function Dashboard() {
         throw new Error('No transcript available for this video');
       }
 
-      // Store transcript but don't display it
+      // Store transcript and display it
       setTranscript(data.transcript);
       setIsLoading(false);
       
-      // Start AI analysis
-      setCurrentStep(5); // Analyzing transcript
-      setIsAnalyzing(true);
-      
-      try {
-        const analysisResponse = await fetch('/api/analyze', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ transcript: data.transcript }),
-        });
-
-        if (!analysisResponse.ok) {
-          const errorData = await analysisResponse.json();
-          throw new Error(errorData.error || 'Failed to analyze transcript');
-        }
-
-        const analysisData = await analysisResponse.json();
-        setAnalysis(analysisData.analysis);
-      } catch (analysisError) {
-        console.error('Analysis error:', analysisError);
-        setError(analysisError instanceof Error ? analysisError.message : 'Failed to analyze transcript');
-      } finally {
-        setIsAnalyzing(false);
-      }
+      // Analysis will now be triggered by the "Confirm Analysis" button
     } catch (err) {
       setIsLoading(false);
       setIsAnalyzing(false);
       setError(err instanceof Error ? err.message : 'An unknown error occurred');
+    }
+  };
+
+  const handleConfirmAnalysis = async () => {
+    if (!transcript) return;
+    
+    try {
+      // Start AI analysis
+      setCurrentStep(5); // Analyzing transcript
+      setIsAnalyzing(true);
+      setShowAnalysis(true);
+      
+      const analysisResponse = await fetch('/api/analyze', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ transcript }),
+      });
+
+      if (!analysisResponse.ok) {
+        const errorData = await analysisResponse.json();
+        throw new Error(errorData.error || 'Failed to analyze transcript');
+      }
+
+      const analysisData = await analysisResponse.json();
+      setAnalysis(analysisData.analysis);
+    } catch (analysisError) {
+      console.error('Analysis error:', analysisError);
+      setError(analysisError instanceof Error ? analysisError.message : 'Failed to analyze transcript');
+    } finally {
+      setIsAnalyzing(false);
     }
   };
 
@@ -148,6 +157,7 @@ export default function Dashboard() {
     setTranscript(null);
     setAnalysis(null);
     setVideoId(null);
+    setShowAnalysis(false);
   };
 
   if (!isSubscribed) {
@@ -194,13 +204,17 @@ export default function Dashboard() {
               <>
                 <TranscriptResults 
                   videoId={videoId} 
-                  onReset={handleReset} 
+                  onReset={handleReset}
+                  transcript={transcript}
+                  onConfirmAnalysis={handleConfirmAnalysis}
                 />
-                <AnalysisResults 
-                  analysis={analysis} 
-                  isLoading={isAnalyzing}
-                  videoId={videoId}
-                />
+                {showAnalysis && (
+                  <AnalysisResults 
+                    analysis={analysis} 
+                    isLoading={isAnalyzing}
+                    videoId={videoId}
+                  />
+                )}
               </>
             )}
 
