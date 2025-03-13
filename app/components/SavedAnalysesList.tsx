@@ -120,11 +120,8 @@ export default function SavedAnalysesList() {
 
   if (!isSignedIn) {
     return (
-      <div className="w-full max-w-4xl mx-auto mt-8 p-6 bg-white dark:bg-gray-950 rounded-lg border border-gray-200 dark:border-gray-800 shadow-sm">
-        <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
-          Saved Analyses
-        </h2>
-        <p className="text-gray-600 dark:text-gray-400">
+      <div className="space-y-4">
+        <p className="text-card-foreground/70">
           Sign in to view and manage your saved analyses.
         </p>
       </div>
@@ -132,14 +129,11 @@ export default function SavedAnalysesList() {
   }
 
   return (
-    <div className="w-full max-w-4xl mx-auto mt-8 p-6 bg-white dark:bg-gray-950 rounded-lg border border-gray-200 dark:border-gray-800 shadow-sm">
-      <div className="flex justify-between items-center mb-6">
-        <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
-          Saved Analyses
-        </h2>
+    <div className="space-y-4">
+      <div className="flex justify-between items-center">
         <button
           onClick={fetchAnalyses}
-          className="px-3 py-1 bg-gray-200 dark:bg-gray-800 hover:bg-gray-300 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg text-sm transition-colors"
+          className="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-9 px-3"
         >
           Refresh
         </button>
@@ -148,11 +142,11 @@ export default function SavedAnalysesList() {
       {isLoading ? (
         <div className="animate-pulse space-y-4">
           {[1, 2, 3].map(i => (
-            <div key={i} className="h-24 bg-gray-200 dark:bg-gray-800 rounded-lg"></div>
+            <div key={i} className="h-24 bg-secondary rounded-lg"></div>
           ))}
         </div>
       ) : analyses.length === 0 ? (
-        <p className="text-gray-600 dark:text-gray-400 text-center py-8">
+        <p className="text-card-foreground/70 text-center py-6">
           You haven't saved any analyses yet.
         </p>
       ) : (
@@ -160,15 +154,15 @@ export default function SavedAnalysesList() {
           {analyses.map(analysis => (
             <div
               key={analysis.id}
-              className="p-4 bg-gray-50 dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-800 hover:border-blue-300 dark:hover:border-blue-700 transition-colors cursor-pointer"
+              className="p-4 bg-background rounded-lg border border-input hover:border-primary/50 transition-colors cursor-pointer"
               onClick={() => handleOpenModal(analysis)}
             >
               <div className="flex justify-between items-start">
                 <div>
-                  <h3 className="font-medium text-gray-900 dark:text-white">
+                  <h3 className="font-medium">
                     {analysis.videoTitle || 'Untitled Video'}
                   </h3>
-                  <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                  <p className="text-sm text-card-foreground/60 mt-1">
                     {new Date(analysis.createdAt).toLocaleDateString()} • Video ID: {analysis.videoId}
                   </p>
                 </div>
@@ -184,7 +178,7 @@ export default function SavedAnalysesList() {
                   </button>
                 </div>
               </div>
-              <p className="text-gray-600 dark:text-gray-300 mt-2 line-clamp-2">
+              <p className="text-card-foreground/70 mt-2 line-clamp-2">
                 {analysis.analysis.substring(0, 150)}...
               </p>
             </div>

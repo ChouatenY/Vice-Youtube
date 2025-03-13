@@ -5,7 +5,7 @@ interface ErrorDisplayProps {
 
 export default function ErrorDisplay({ message, onRetry }: ErrorDisplayProps) {
   return (
-    <div className="w-full max-w-2xl mx-auto mt-8 p-6 bg-white dark:bg-gray-950 border border-red-200 dark:border-red-800 rounded-lg text-center shadow-sm">
+    <div className="space-y-4 rounded-lg border border-red-200 bg-card text-card-foreground shadow-sm p-6 text-center">
       <svg 
         xmlns="http://www.w3.org/2000/svg" 
         className="h-12 w-12 mx-auto text-red-500 mb-4" 
@@ -21,17 +21,17 @@ export default function ErrorDisplay({ message, onRetry }: ErrorDisplayProps) {
         />
       </svg>
       
-      <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
+      <h3 className="text-lg font-semibold">
         Error Occurred
       </h3>
       
-      <p className="text-gray-700 dark:text-gray-300 mb-4">
+      <p className="text-card-foreground/70">
         {message}
       </p>
       
       <button
         onClick={onRetry}
-        className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-medium rounded-lg transition-colors"
+        className="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2"
       >
         Try Again
       </button>

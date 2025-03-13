@@ -9,6 +9,7 @@ import TranscriptResults from '../components/TranscriptResults';
 import ErrorDisplay from '../components/ErrorDisplay';
 import AnalysisResults from '../components/AnalysisResults';
 import SavedAnalysesList from '../components/SavedAnalysesList';
+import Link from 'next/link';
 
 interface TranscriptEntry {
   text: string;
@@ -152,64 +153,67 @@ export default function Dashboard() {
 
   if (!isSubscribed) {
     return (
-      <div className="min-h-screen bg-[#0A0A0F] flex flex-col items-center justify-center space-y-8 p-4">
-        <div className="bg-[#1A1A23] p-10 rounded-2xl shadow-2xl border border-[#2A2A35] max-w-md w-full">
-          <p className="text-2xl font-bold text-white mb-6 text-center">Premium Access Required</p>
+      <div className="max-w-2xl mx-auto py-8 px-4">
+        <div className="space-y-4 rounded-lg border bg-card text-card-foreground shadow-sm p-6">
+          <Link href="/" className="text-sm font-medium text-primary underline-offset-4 hover:underline">&larr; Back</Link>
+          <h2 className="border-b pb-2 text-3xl font-semibold tracking-tight">Premium Access Required</h2>
+          <p className="leading-7">Please subscribe to access this feature</p>
+          <Link href="/pricing">
+            <button className="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2">
+              View Plans
+            </button>
+          </Link>
         </div>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-[#0A0A0F] text-gray-200">
-      <main className="max-w-7xl mx-auto px-6 py-16">
-        <div className="max-w-4xl mx-auto space-y-8">
-          <div className="bg-[#1A1A23] p-10 rounded-2xl shadow-2xl border border-[#2A2A35]">
-            <div className="flex justify-between items-center mb-6">
-              <h1 className="text-3xl font-bold text-white">YouTube Video Analyzer</h1>
-              <UserButton afterSignOutUrl="/" />
-            </div>
-            <p className="text-xl text-emerald-400 font-semibold flex items-center gap-2 mb-6">
-              <span className="inline-block w-3 h-3 bg-emerald-400 rounded-full animate-pulse"></span>
+    <div className="max-w-5xl mx-auto py-8 px-4">
+      <main className="space-y-8">
+        <div className="space-y-4 rounded-lg border bg-card text-card-foreground shadow-sm p-6">
+
+          <div className="py-2 border-b pb-4">
+            <p className="text-sm font-medium text-emerald-500 flex items-center gap-2">
+              <span className="inline-block w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></span>
               Subscription Active
             </p>
-            
-            <p className="mt-3 text-xl text-gray-400 mb-8">
-              Extract and analyze content from YouTube videos with AI
-            </p>
-
-            {!transcript && !error && (
-              <YouTubeInput onSubmit={handleSubmit} isLoading={isLoading} />
-            )}
-
-            {isLoading && currentStep > 0 && (
-              <ProgressIndicator currentStep={currentStep} totalSteps={totalSteps} />
-            )}
-
-            {error && (
-              <ErrorDisplay message={error} onRetry={handleReset} />
-            )}
-
-            {transcript && videoId && !error && (
-              <>
-                <TranscriptResults 
-                  videoId={videoId} 
-                  onReset={handleReset} 
-                />
-                <AnalysisResults 
-                  analysis={analysis} 
-                  isLoading={isAnalyzing}
-                  videoId={videoId}
-                />
-              </>
-            )}
-
-            {/* Saved Analyses List */}
-            {!isLoading && (
-              <SavedAnalysesList />
-            )}
           </div>
+
+          {!transcript && !error && (
+            <YouTubeInput onSubmit={handleSubmit} isLoading={isLoading} />
+          )}
+
+          {isLoading && currentStep > 0 && (
+            <ProgressIndicator currentStep={currentStep} totalSteps={totalSteps} />
+          )}
+
+          {error && (
+            <ErrorDisplay message={error} onRetry={handleReset} />
+          )}
+
+          {transcript && videoId && !error && (
+            <>
+              <TranscriptResults 
+                videoId={videoId} 
+                onReset={handleReset} 
+              />
+              <AnalysisResults 
+                analysis={analysis} 
+                isLoading={isAnalyzing}
+                videoId={videoId}
+              />
+            </>
+          )}
         </div>
+
+        {/* Saved Analyses List */}
+        {!isLoading && (
+          <div className="space-y-4 rounded-lg border bg-card text-card-foreground shadow-sm p-6">
+            <h2 className="border-b pb-2 text-2xl font-semibold tracking-tight">Saved Analyses</h2>
+            <SavedAnalysesList />
+          </div>
+        )}
       </main>
     </div>
   )

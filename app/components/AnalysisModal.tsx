@@ -65,67 +65,67 @@ export default function AnalysisModal({ isOpen, onClose, analysis, onUpdate, onD
       isOpen={isOpen}
       onRequestClose={onClose}
       contentLabel="Analysis Details"
-      className="max-w-4xl mx-auto mt-20 p-6 bg-white dark:bg-gray-950 rounded-lg border border-gray-200 dark:border-gray-800 shadow-xl outline-none"
+      className="max-w-4xl mx-auto mt-20 space-y-4 rounded-lg border bg-card text-card-foreground shadow-sm p-6 outline-none"
       overlayClassName="fixed inset-0 bg-black bg-opacity-50 flex justify-center overflow-y-auto"
     >
-      <div className="flex justify-between items-start mb-4">
+      <div className="flex justify-between items-start border-b pb-4">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+          <h2 className="text-2xl font-semibold tracking-tight">
             {analysis.videoTitle || 'Untitled Video'}
           </h2>
-          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+          <p className="text-sm text-card-foreground/60 mt-1">
             {new Date(analysis.createdAt).toLocaleDateString()} • Video ID: {analysis.videoId}
           </p>
         </div>
         <button
           onClick={onClose}
-          className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+          className="text-card-foreground/60 hover:text-card-foreground"
         >
           ✕
         </button>
       </div>
 
       {isEditing ? (
-        <div className="mt-4">
+        <div className="space-y-4">
           <textarea
             value={editedAnalysis}
             onChange={(e) => setEditedAnalysis(e.target.value)}
-            className="w-full h-96 p-4 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+            className="w-full h-96 p-4 border border-input rounded-md bg-background text-foreground focus:ring-2 focus:ring-ring focus:border-input transition-all"
           />
-          <div className="flex justify-end space-x-2 mt-4">
+          <div className="flex justify-end space-x-2">
             <button
               onClick={handleCancel}
               disabled={isSaving}
-              className="px-4 py-2 bg-gray-200 hover:bg-gray-300 dark:bg-gray-800 dark:hover:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-lg transition-colors"
+              className="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2"
             >
               Cancel
             </button>
             <button
               onClick={handleSave}
               disabled={isSaving}
-              className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2"
             >
               {isSaving ? 'Saving...' : 'Save Changes'}
             </button>
           </div>
         </div>
       ) : (
-        <div className="mt-4">
-          <div className="prose prose-gray dark:prose-invert max-w-none prose-headings:font-semibold prose-headings:text-gray-900 dark:prose-headings:text-white prose-p:text-gray-700 dark:prose-p:text-gray-300 prose-li:text-gray-700 dark:prose-li:text-gray-300 prose-strong:text-gray-900 dark:prose-strong:text-white prose-h2:text-xl prose-h3:text-lg prose-h2:mt-8 prose-h3:mt-6 prose-p:leading-relaxed prose-p:my-4 prose-ul:my-4 prose-ol:my-4 prose-li:my-1">
+        <div className="space-y-4">
+          <div className="prose prose-neutral dark:prose-invert max-w-none prose-headings:font-semibold prose-headings:text-foreground prose-p:text-card-foreground/80 prose-li:text-card-foreground/80 prose-strong:text-foreground prose-h2:text-xl prose-h3:text-lg prose-h2:mt-6 prose-h3:mt-4 prose-p:leading-relaxed prose-p:my-3 prose-ul:my-3 prose-ol:my-3 prose-li:my-1">
             <ReactMarkdown>
               {analysis.analysis}
             </ReactMarkdown>
           </div>
-          <div className="flex justify-between mt-6">
+          <div className="flex justify-between pt-4 border-t">
             <button
               onClick={handleDelete}
-              className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors"
+              className="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-destructive text-destructive-foreground hover:bg-destructive/90 h-10 px-4 py-2"
             >
               Delete
             </button>
             <button
               onClick={handleEdit}
-              className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
+              className="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2"
             >
               Edit
             </button>

@@ -33,15 +33,15 @@ export default function YouTubeInput({ onSubmit, isLoading }: YouTubeInputProps)
   };
 
   return (
-    <div className="w-full max-w-2xl mx-auto">
-      <div className="bg-white dark:bg-gray-950 rounded-lg border border-gray-200 dark:border-gray-800 p-6 shadow-sm">
-        <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
+    <div className="w-full">
+      <div className="space-y-4">
+        <h2 className="text-xl font-semibold">
           Enter a YouTube Video URL
         </h2>
         
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="relative">
-            <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-gray-400">
+            <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
               <FaYoutube className="w-5 h-5 text-red-600" />
             </div>
             <input
@@ -49,19 +49,19 @@ export default function YouTubeInput({ onSubmit, isLoading }: YouTubeInputProps)
               value={url}
               onChange={(e) => setUrl(e.target.value)}
               placeholder="Enter YouTube URL (e.g., https://www.youtube.com/watch?v=pcC4Dr6Wj2Q&t=1s)"
-              className="w-full pl-10 pr-4 py-3 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-all"
+              className="w-full pl-10 pr-4 py-3 border border-input rounded-md bg-background text-foreground focus:ring-2 focus:ring-ring focus:border-input transition-all"
               disabled={isLoading}
             />
           </div>
           
           {error && (
-            <p className="text-red-500 text-sm mt-1">{error}</p>
+            <p className="text-red-500 text-sm">{error}</p>
           )}
           
           <button
             type="submit"
             disabled={isLoading}
-            className="w-full flex items-center justify-center py-3 px-4 bg-red-600 hover:bg-red-700 text-white font-medium rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2"
           >
             {isLoading ? (
               <>
@@ -77,7 +77,7 @@ export default function YouTubeInput({ onSubmit, isLoading }: YouTubeInputProps)
           </button>
         </form>
         
-        <p className="text-xs text-gray-500 dark:text-gray-400 mt-4">
+        <p className="text-xs text-card-foreground/70">
           The AI will analyze the video content and provide a comprehensive summary and insights.
         </p>
       </div>
