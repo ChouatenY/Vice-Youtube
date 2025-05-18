@@ -1,20 +1,12 @@
+'use server';
+
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
-import { auth } from '@clerk/nextjs/server';
+import { saveAnalysis, getAnalyses } from '@/lib/server-actions';
 
 export async function POST(request: NextRequest) {
   try {
-    const { userId } = await auth();
-    
-    if (!userId) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
-    }
+    const { videoId, videoTitle, analysis, userId } = await request.json();
 
-    const { videoId, videoTitle, analysis } = await request.json();
-    
     if (!videoId || !analysis) {
       return NextResponse.json(
         { error: 'VideoId and analysis are required' },
@@ -22,21 +14,17 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Save the analysis to the database
-    const savedAnalysis = await prisma.analysis.create({
-      data: {
-        videoId,
-        videoTitle: videoTitle || 'Untitled Video',
-        analysis,
-        userId
-      }
-    });
+    console.log('User ID from request body:', userId || 'Not provided');
 
-    return NextResponse.json({ success: true, analysis: savedAnalysis });
+    // Use the server action to save the analysis with the user ID if provided
+    const result = await saveAnalysis(videoId, videoTitle || null, analysis, userId || undefined);
+    return NextResponse.json(result);
   } catch (error) {
     console.error('Error saving analysis:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    console.error('Error details:', errorMessage);
     return NextResponse.json(
-      { error: 'Failed to save analysis' },
+      { error: 'Failed to save analysis', details: errorMessage },
       { status: 500 }
     );
   }
@@ -44,31 +32,30 @@ export async function POST(request: NextRequest) {
 
 export async function GET(request: NextRequest) {
   try {
-    const { userId } = await auth();
-    
-    if (!userId) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
-    }
+    console.log('GET /api/analysis - Starting request');
+    console.log('Request URL:', request.url);
 
-    // Get all analyses for the current user
-    const analyses = await prisma.analysis.findMany({
-      where: {
-        userId
-      },
-      orderBy: {
-        createdAt: 'desc'
-      }
-    });
+    // Get the user ID from the query parameters
+    const searchParams = request.nextUrl.searchParams;
+    const userId = searchParams.get('userId');
 
-    return NextResponse.json({ analyses });
+    console.log('User ID from query parameters:', userId || 'Not provided');
+
+    // Use the server action to get analyses with the user ID if provided
+    console.log('Calling getAnalyses server action with userId:', userId || 'undefined');
+    const result = await getAnalyses(userId || undefined);
+    console.log('Server action completed successfully, result:', JSON.stringify(result));
+
+    return NextResponse.json(result);
   } catch (error) {
-    console.error('Error fetching analyses:', error);
+    console.error('Error in GET /api/analysis:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    console.error('Error details:', errorMessage);
+    console.error('Error stack:', error instanceof Error ? error.stack : 'No stack trace');
+
     return NextResponse.json(
-      { error: 'Failed to fetch analyses' },
+      { error: 'Failed to fetch analyses', details: errorMessage },
       { status: 500 }
     );
   }
-} 
+}

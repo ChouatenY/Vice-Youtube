@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { useAuth } from '@clerk/nextjs';
+import { useLocalUser } from '@/lib/local-user-context';
+import { saveAnalysis } from '@/lib/client-actions';
 
 interface SaveAnalysisButtonProps {
   videoId: string;
@@ -10,36 +11,19 @@ interface SaveAnalysisButtonProps {
 export default function SaveAnalysisButton({ videoId, analysis, onSaved }: SaveAnalysisButtonProps) {
   const [isSaving, setIsSaving] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
-  const { userId, isSignedIn } = useAuth();
+  const { user } = useLocalUser();
 
   const handleSave = async () => {
-    if (!isSignedIn) {
-      alert('Please sign in to save analyses');
-      return;
-    }
-
     setIsSaving(true);
     setIsSuccess(false);
 
     try {
-      const response = await fetch('/api/analysis', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          videoId,
-          analysis,
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to save analysis');
-      }
+      // Use the client action to save the analysis
+      await saveAnalysis(videoId, null, analysis);
 
       setIsSuccess(true);
       onSaved();
-      
+
       // Reset success state after 3 seconds
       setTimeout(() => {
         setIsSuccess(false);
@@ -55,7 +39,7 @@ export default function SaveAnalysisButton({ videoId, analysis, onSaved }: SaveA
   return (
     <button
       onClick={handleSave}
-      disabled={isSaving || !isSignedIn}
+      disabled={isSaving}
       className={`inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 h-10 px-4 py-2 ${
         isSuccess
           ? 'bg-green-600 text-white hover:bg-green-700'
@@ -66,9 +50,7 @@ export default function SaveAnalysisButton({ videoId, analysis, onSaved }: SaveA
         ? 'Saved!'
         : isSaving
         ? 'Saving...'
-        : isSignedIn
-        ? 'Save Analysis'
-        : 'Sign in to Save'}
+        : 'Save Analysis'}
     </button>
   );
-} 
+}

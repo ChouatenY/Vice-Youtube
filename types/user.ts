@@ -2,9 +2,5 @@
 export type UserResponse = {
     id: string;
     email: string;
-    subscription: {
-      status: string;
-      currentPeriodEnd: Date;
-      planId: string;
-    } | null;
+    name: string | null;
   }

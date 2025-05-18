@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { UserResponse } from '@/types/user';
-import { UserButton } from '@clerk/nextjs';
+import { useLocalUser } from '@/lib/local-user-context';
 import YouTubeInput from '../components/YouTubeInput';
 import ProgressIndicator from '../components/ProgressIndicator';
 import TranscriptResults from '../components/TranscriptResults';
@@ -29,20 +29,32 @@ export default function Dashboard() {
   const [transcript, setTranscript] = useState<TranscriptEntry[] | null>(null);
   const [analysis, setAnalysis] = useState<string | null>(null);
   const [videoId, setVideoId] = useState<string | null>(null);
+  const { user } = useLocalUser();
 
   const totalSteps = 5; // Added one more step for AI analysis
 
-  const isSubscribed = userData?.subscription?.status === 'active';
+  // Always consider the user as subscribed in this local version
+  const isSubscribed = true;
 
   useEffect(() => {
     const fetchUserData = async () => {
       try {
-        const response = await fetch('/api/user');
-        
+        // Get the user ID from local storage
+        let userId = null;
+        if (typeof window !== 'undefined') {
+          userId = localStorage.getItem('localUserId');
+        }
+
+        // Add the user ID as a query parameter if available
+        const url = userId ? `/api/user?userId=${userId}` : '/api/user';
+        console.log('Fetching user data with URL:', url);
+
+        const response = await fetch(url);
+
         if (!response.ok) {
           throw new Error('Failed to fetch user data');
         }
-        
+
         const data: UserResponse = await response.json();
         setUserData(data);
       } catch (err) {
@@ -60,7 +72,7 @@ export default function Dashboard() {
     return match && match[1] ? match[1] : null;
   };
 
-  const handleSubmit = async (url: string) => {
+  const handleSubmit = async (url: string, specificRequest?: string) => {
     try {
       // Reset states
       setIsLoading(true);
@@ -70,12 +82,14 @@ export default function Dashboard() {
       setTranscript(null);
       setCurrentStep(1); // Validating URL
 
+      console.log('Specific request:', specificRequest || 'None provided');
+
       // Extract video ID
       const extractedVideoId = extractVideoId(url);
       if (!extractedVideoId) {
         throw new Error('Invalid YouTube URL');
       }
-      
+
       setVideoId(extractedVideoId);
       setCurrentStep(2); // Fetching video details
 
@@ -96,7 +110,7 @@ export default function Dashboard() {
       }
 
       const data = await response.json();
-      
+
       setCurrentStep(4); // Processing data
 
       // Process transcript data
@@ -107,30 +121,81 @@ export default function Dashboard() {
       // Store transcript but don't display it
       setTranscript(data.transcript);
       setIsLoading(false);
-      
+
       // Start AI analysis
       setCurrentStep(5); // Analyzing transcript
       setIsAnalyzing(true);
-      
+
       try {
-        const analysisResponse = await fetch('/api/analyze', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ transcript: data.transcript }),
-        });
+        console.log('Starting transcript analysis...');
 
-        if (!analysisResponse.ok) {
-          const errorData = await analysisResponse.json();
-          throw new Error(errorData.error || 'Failed to analyze transcript');
+        // Add timeout and retry logic for the API call
+        const fetchWithTimeout = async (url: string, options: any, timeout = 60000) => {
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => controller.abort(), timeout);
+
+          try {
+            const response = await fetch(url, {
+              ...options,
+              signal: controller.signal
+            });
+            clearTimeout(timeoutId);
+            return response;
+          } catch (error) {
+            clearTimeout(timeoutId);
+            console.error('Fetch error with timeout:', error);
+            throw error;
+          }
+        };
+
+        console.log('Sending analysis request with transcript length:', data.transcript.length);
+
+        try {
+          const analysisResponse = await fetchWithTimeout('/api/analyze', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              transcript: data.transcript,
+              specificRequest: specificRequest || undefined,
+              videoId: extractedVideoId
+            }),
+          });
+
+          console.log('Analysis API response status:', analysisResponse.status);
+
+          if (!analysisResponse.ok) {
+            let errorData = {};
+            try {
+              errorData = await analysisResponse.json();
+            } catch (jsonError) {
+              console.error('Error parsing error response:', jsonError);
+            }
+
+            console.error('API error response:', errorData);
+            throw new Error(errorData.details || errorData.error || `Server responded with status ${analysisResponse.status}`);
+          }
+
+          let analysisData;
+          try {
+            analysisData = await analysisResponse.json();
+          } catch (jsonError) {
+            console.error('Error parsing analysis response:', jsonError);
+            throw new Error('Failed to parse analysis response');
+          }
+
+          console.log('Analysis completed successfully');
+          setAnalysis(analysisData.analysis);
+        } catch (fetchError) {
+          console.error('Fetch error during analysis:', fetchError);
+          throw fetchError;
         }
-
-        const analysisData = await analysisResponse.json();
-        setAnalysis(analysisData.analysis);
       } catch (analysisError) {
         console.error('Analysis error:', analysisError);
-        setError(analysisError instanceof Error ? analysisError.message : 'Failed to analyze transcript');
+        const errorMessage = analysisError instanceof Error ? analysisError.message : 'Unknown error';
+        console.error('Error details:', errorMessage);
+        setError(errorMessage);
       } finally {
         setIsAnalyzing(false);
       }
@@ -151,32 +216,15 @@ export default function Dashboard() {
     setVideoId(null);
   };
 
-  if (!isSubscribed) {
-    return (
-      <div className="max-w-2xl mx-auto py-8 px-4">
-        <div className="space-y-4 rounded-lg border bg-card text-card-foreground shadow-sm p-6">
-          <Link href="/" className="text-sm font-medium text-primary underline-offset-4 hover:underline">&larr; Back</Link>
-          <h2 className="border-b pb-2 text-3xl font-semibold tracking-tight">Premium Access Required</h2>
-          <p className="leading-7">Please subscribe to access this feature</p>
-          <Link href="/pricing">
-            <button className="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2">
-              View Plans
-            </button>
-          </Link>
-        </div>
-      </div>
-    )
-  }
-
   return (
     <div className="max-w-5xl mx-auto py-8 px-4">
       <main className="space-y-8">
         <div className="space-y-4 rounded-lg border bg-card text-card-foreground shadow-sm p-6">
 
           <div className="py-2 border-b pb-4">
-            <p className="text-sm font-medium text-emerald-500 flex items-center gap-2">
-              <span className="inline-block w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></span>
-              Subscription Active
+            <p className="text-sm font-medium text-primary flex items-center gap-2">
+              <span className="inline-block w-2 h-2 bg-primary rounded-full animate-pulse"></span>
+              Ready to Analyze
             </p>
           </div>
 
@@ -194,12 +242,12 @@ export default function Dashboard() {
 
           {transcript && videoId && !error && (
             <>
-              <TranscriptResults 
-                videoId={videoId} 
-                onReset={handleReset} 
+              <TranscriptResults
+                videoId={videoId}
+                onReset={handleReset}
               />
-              <AnalysisResults 
-                analysis={analysis} 
+              <AnalysisResults
+                analysis={analysis}
                 isLoading={isAnalyzing}
                 videoId={videoId}
               />
@@ -210,7 +258,7 @@ export default function Dashboard() {
         {/* Saved Analyses List */}
         {!isLoading && (
           <div className="space-y-4 rounded-lg border bg-card text-card-foreground shadow-sm p-6">
-            <h2 className="border-b pb-2 text-2xl font-semibold tracking-tight">Saved Analyses</h2>
+            <h2 className="border-b pb-2 text-2xl font-semibold tracking-tight text-primary">Saved Analyses</h2>
             <SavedAnalysesList />
           </div>
         )}

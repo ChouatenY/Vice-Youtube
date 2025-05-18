@@ -1,14 +1,17 @@
 import { useState } from 'react';
 import { FaYoutube } from 'react-icons/fa';
+import { FaSearch } from 'react-icons/fa';
 
 interface YouTubeInputProps {
-  onSubmit: (url: string) => void;
+  onSubmit: (url: string, specificRequest?: string) => void;
   isLoading: boolean;
 }
 
 export default function YouTubeInput({ onSubmit, isLoading }: YouTubeInputProps) {
   const [url, setUrl] = useState('');
+  const [specificRequest, setSpecificRequest] = useState('');
   const [error, setError] = useState('');
+  const [showAdvanced, setShowAdvanced] = useState(false);
 
   const validateYouTubeUrl = (url: string) => {
     const pattern = /^(https?:\/\/)?(www\.)?(youtube\.com\/watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]{11})(&.*)?$/;
@@ -29,16 +32,17 @@ export default function YouTubeInput({ onSubmit, isLoading }: YouTubeInputProps)
       return;
     }
 
-    onSubmit(url);
+    // Pass both the URL and the specific request (if any)
+    onSubmit(url, specificRequest.trim() || undefined);
   };
 
   return (
     <div className="w-full">
       <div className="space-y-4">
-        <h2 className="text-xl font-semibold">
+        <h2 className="text-xl font-semibold text-primary">
           Enter a YouTube Video URL
         </h2>
-        
+
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="relative">
             <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
@@ -53,11 +57,39 @@ export default function YouTubeInput({ onSubmit, isLoading }: YouTubeInputProps)
               disabled={isLoading}
             />
           </div>
-          
+
+          <div className="flex items-center">
+            <button
+              type="button"
+              onClick={() => setShowAdvanced(!showAdvanced)}
+              className="text-sm text-primary hover:underline focus:outline-none"
+            >
+              {showAdvanced ? '- Hide advanced options' : '+ Show advanced options'}
+            </button>
+          </div>
+
+          {showAdvanced && (
+            <div className="relative">
+              <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                <FaSearch className="w-5 h-5 text-gray-400" />
+              </div>
+              <textarea
+                value={specificRequest}
+                onChange={(e) => setSpecificRequest(e.target.value)}
+                placeholder="Specify what you want from the video (e.g., 'Find timestamps where they talk about climate change' or 'Extract key statistics mentioned')"
+                className="w-full pl-10 pr-4 py-3 border border-input rounded-md bg-background text-foreground focus:ring-2 focus:ring-ring focus:border-input transition-all min-h-[100px]"
+                disabled={isLoading}
+              />
+              <p className="mt-1 text-xs text-card-foreground/70">
+                Leave empty for a general analysis, or specify exactly what you want the AI to focus on.
+              </p>
+            </div>
+          )}
+
           {error && (
             <p className="text-red-500 text-sm">{error}</p>
           )}
-          
+
           <button
             type="submit"
             disabled={isLoading}
@@ -76,11 +108,11 @@ export default function YouTubeInput({ onSubmit, isLoading }: YouTubeInputProps)
             )}
           </button>
         </form>
-        
+
         <p className="text-xs text-card-foreground/70">
-          The AI will analyze the video content and provide a comprehensive summary and insights.
+          The AI will analyze the video content and provide a comprehensive summary with timestamps for important moments.
         </p>
       </div>
     </div>
   );
-} 
+}

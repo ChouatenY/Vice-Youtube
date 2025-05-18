@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
-import { useAuth } from '@clerk/nextjs';
+import { useLocalUser } from '@/lib/local-user-context';
 import AnalysisModal from './AnalysisModal';
+import { fetchAnalyses, deleteAnalysis, updateAnalysis } from '@/lib/client-actions';
 
 interface Analysis {
   id: string;
@@ -16,27 +17,53 @@ export default function SavedAnalysesList() {
   const [isLoading, setIsLoading] = useState(false);
   const [selectedAnalysis, setSelectedAnalysis] = useState<Analysis | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const { isSignedIn } = useAuth();
+  const { user } = useLocalUser();
 
   useEffect(() => {
-    if (isSignedIn) {
-      fetchAnalyses();
+    if (user) {
+      getAnalysesData();
     }
-  }, [isSignedIn]);
+  }, [user]);
 
-  const fetchAnalyses = async () => {
-    if (!isSignedIn) return;
-    
+  const [fetchError, setFetchError] = useState<string | null>(null);
+
+  const getAnalysesData = async () => {
+    if (!user) {
+      console.log('No user available, skipping analyses fetch');
+      return;
+    }
+
     setIsLoading(true);
+    setFetchError(null);
+
     try {
-      const response = await fetch('/api/analysis');
-      if (!response.ok) {
-        throw new Error('Failed to fetch analyses');
+      console.log('Fetching analyses using client action...');
+      console.log('Current user:', user);
+
+      // Get the user ID from local storage
+      const userId = typeof window !== 'undefined' ? localStorage.getItem('localUserId') : null;
+      console.log('User ID from local storage:', userId);
+
+      if (!userId) {
+        console.warn('No user ID found in local storage, using default user ID');
       }
-      const data = await response.json();
-      setAnalyses(data.analyses);
+
+      // Use the client action to fetch analyses
+      const result = await fetchAnalyses();
+      console.log('Fetch analyses result:', result);
+
+      if (!result || !result.analyses) {
+        throw new Error('Invalid response format: missing analyses array');
+      }
+
+      const { analyses: fetchedAnalyses } = result;
+      console.log('Analyses fetched successfully:', fetchedAnalyses?.length || 0, 'items');
+      setAnalyses(fetchedAnalyses || []);
     } catch (error) {
       console.error('Error fetching analyses:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      console.error('Error details:', errorMessage);
+      setFetchError(errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -58,17 +85,12 @@ export default function SavedAnalysesList() {
     }
 
     try {
-      const response = await fetch(`/api/analysis/${id}`, {
-        method: 'DELETE',
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to delete analysis');
-      }
+      // Use the client action to delete the analysis
+      await deleteAnalysis(id);
 
       // Remove the deleted analysis from the list
       setAnalyses(analyses.filter(analysis => analysis.id !== id));
-      
+
       // Close the modal if the deleted analysis was selected
       if (selectedAnalysis?.id === id) {
         handleCloseModal();
@@ -81,31 +103,22 @@ export default function SavedAnalysesList() {
 
   const handleUpdate = async (id: string, updatedAnalysis: string) => {
     try {
-      const response = await fetch(`/api/analysis/${id}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ analysis: updatedAnalysis }),
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to update analysis');
-      }
+      // Use the client action to update the analysis
+      await updateAnalysis(id, updatedAnalysis);
 
       // Update the analysis in the list
       setAnalyses(
-        analyses.map(analysis => 
-          analysis.id === id 
-            ? { ...analysis, analysis: updatedAnalysis, updatedAt: new Date().toISOString() } 
+        analyses.map(analysis =>
+          analysis.id === id
+            ? { ...analysis, analysis: updatedAnalysis, updatedAt: new Date().toISOString() }
             : analysis
         )
       );
 
       // Update the selected analysis if it was the one that was updated
       if (selectedAnalysis?.id === id) {
-        setSelectedAnalysis({ 
-          ...selectedAnalysis, 
+        setSelectedAnalysis({
+          ...selectedAnalysis,
           analysis: updatedAnalysis,
           updatedAt: new Date().toISOString()
         });
@@ -118,21 +131,11 @@ export default function SavedAnalysesList() {
     }
   };
 
-  if (!isSignedIn) {
-    return (
-      <div className="space-y-4">
-        <p className="text-card-foreground/70">
-          Sign in to view and manage your saved analyses.
-        </p>
-      </div>
-    );
-  }
-
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
         <button
-          onClick={fetchAnalyses}
+          onClick={getAnalysesData}
           className="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-9 px-3"
         >
           Refresh
@@ -144,6 +147,17 @@ export default function SavedAnalysesList() {
           {[1, 2, 3].map(i => (
             <div key={i} className="h-24 bg-secondary rounded-lg"></div>
           ))}
+        </div>
+      ) : fetchError ? (
+        <div className="p-4 bg-red-100 text-red-700 rounded mb-4">
+          <p className="font-bold">Error fetching analyses:</p>
+          <p>{fetchError}</p>
+          <button
+            onClick={getAnalysesData}
+            className="mt-2 px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700 text-sm"
+          >
+            Try Again
+          </button>
         </div>
       ) : analyses.length === 0 ? (
         <p className="text-card-foreground/70 text-center py-6">
@@ -197,4 +211,4 @@ export default function SavedAnalysesList() {
       )}
     </div>
   );
-} 
+}

@@ -6,7 +6,7 @@ A modern web application built with Next.js that extracts and analyzes YouTube v
 
 - YouTube URL input with validation
 - Transcript extraction using youtubei.js package
-- AI-powered content analysis with DeepSeek AI
+- AI-powered content analysis with Google's Gemini API
 - Clean, user-friendly interface with responsive design
 - Loading states with progress indicators and skeleton loaders
 - Error handling for various scenarios
@@ -18,7 +18,7 @@ A modern web application built with Next.js that extracts and analyzes YouTube v
 
 - Node.js 18.x or later
 - npm or yarn
-- DeepSeek AI API key
+- Google Gemini API key
 
 ### Installation
 
@@ -37,13 +37,15 @@ npm install
 yarn install
 ```
 
-3. Create a `.env.local` file in the root directory and add your DeepSeek API key:
+3. Create a `.env.local` file in the root directory and add your Gemini API key:
 
 ```
-DEEPSEEK_API_KEY=your_deepseek_api_key_here
+GEMINI_API_KEY=your_gemini_api_key_here
+DATABASE_URL=your_database_url_here
+DIRECT_URL=your_direct_database_url_here
 ```
 
-You can get a DeepSeek API key by signing up at [DeepSeek AI](https://deepseek.ai).
+You can get a Gemini API key by signing up at [Google AI Studio](https://ai.google.dev/).
 
 ### Development
 
@@ -80,9 +82,10 @@ yarn build
 - TypeScript
 - Tailwind CSS
 - youtubei.js package
-- DeepSeek AI API
+- Google Gemini API
 - React Icons
 - React Markdown
+- PostgreSQL with Prisma ORM
 
 ## License
 
@@ -93,4 +96,4 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 - [Next.js](https://nextjs.org/)
 - [Tailwind CSS](https://tailwindcss.com/)
 - [youtubei.js](https://github.com/LuanRT/YouTube.js)
-- [DeepSeek AI](https://deepseek.ai/)
+- [Google Gemini API](https://ai.google.dev/)
