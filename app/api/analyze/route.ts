@@ -75,10 +75,15 @@ ${transcriptWithTimestamps}`;
 
     console.log('Calling Gemini API with Flash Pro model...');
 
-    // Add timeout and retry logic for the API call
-    const fetchWithRetry = async (url: string, options: any, retries = 3, timeout = 30000) => {
+    // Add timeout and retry logic for the API call optimized for Vercel
+    const fetchWithRetry = async (url: string, options: any, retries = 2, timeout = 8000) => {
+      // Use a shorter timeout for Vercel serverless functions (10s limit on hobby plan)
+      // We use 8 seconds to leave some buffer for processing the response
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), timeout);
+      const timeoutId = setTimeout(() => {
+        controller.abort();
+        console.log('Request timed out after', timeout, 'ms');
+      }, timeout);
 
       try {
         const response = await fetch(url, {
@@ -89,10 +94,16 @@ ${transcriptWithTimestamps}`;
         return response;
       } catch (error) {
         clearTimeout(timeoutId);
+
+        // Check if this was a timeout error
+        if (error instanceof Error && error.name === 'AbortError') {
+          throw new Error('Request timed out. The analysis is taking too long. Please try with a shorter video or a more specific request.');
+        }
+
         if (retries <= 1) throw error;
 
         console.log(`Fetch attempt failed, retrying... (${retries - 1} attempts left)`);
-        await new Promise(resolve => setTimeout(resolve, 1000)); // Wait 1 second before retrying
+        await new Promise(resolve => setTimeout(resolve, 500)); // Wait 0.5 second before retrying
         return fetchWithRetry(url, options, retries - 1, timeout);
       }
     };
@@ -118,8 +129,10 @@ ${transcriptWithTimestamps}`;
               }
             ],
             generationConfig: {
-              temperature: 0.5,
-              maxOutputTokens: 1500
+              temperature: 0.4,
+              maxOutputTokens: 1000,
+              topK: 40,
+              topP: 0.95
             }
           })
         }

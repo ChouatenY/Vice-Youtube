@@ -9,7 +9,7 @@ import TranscriptResults from '../components/TranscriptResults';
 import ErrorDisplay from '../components/ErrorDisplay';
 import AnalysisResults from '../components/AnalysisResults';
 import SavedAnalysesList from '../components/SavedAnalysesList';
-import Link from 'next/link';
+import Image from 'next/image';
 
 interface TranscriptEntry {
   text: string;
@@ -22,50 +22,17 @@ export default function Dashboard() {
   const [summary, setSummary] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>('')
-  const [userData, setUserData] = useState<UserResponse | null>(null);
-  const [loading, setLoading] = useState(true);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
   const [transcript, setTranscript] = useState<TranscriptEntry[] | null>(null);
   const [analysis, setAnalysis] = useState<string | null>(null);
   const [videoId, setVideoId] = useState<string | null>(null);
-  const { user } = useLocalUser();
+  const { user, isLoading: isUserLoading } = useLocalUser();
 
   const totalSteps = 5; // Added one more step for AI analysis
 
   // Always consider the user as subscribed in this local version
   const isSubscribed = true;
-
-  useEffect(() => {
-    const fetchUserData = async () => {
-      try {
-        // Get the user ID from local storage
-        let userId = null;
-        if (typeof window !== 'undefined') {
-          userId = localStorage.getItem('localUserId');
-        }
-
-        // Add the user ID as a query parameter if available
-        const url = userId ? `/api/user?userId=${userId}` : '/api/user';
-        console.log('Fetching user data with URL:', url);
-
-        const response = await fetch(url);
-
-        if (!response.ok) {
-          throw new Error('Failed to fetch user data');
-        }
-
-        const data: UserResponse = await response.json();
-        setUserData(data);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to load data');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchUserData();
-  }, []);
 
   const extractVideoId = (url: string) => {
     const match = url.match(/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/);
@@ -129,10 +96,13 @@ export default function Dashboard() {
       try {
         console.log('Starting transcript analysis...');
 
-        // Add timeout and retry logic for the API call
-        const fetchWithTimeout = async (url: string, options: any, timeout = 60000) => {
+        // Add timeout and retry logic for the API call optimized for Vercel
+        const fetchWithTimeout = async (url: string, options: any, timeout = 30000, retries = 1) => {
           const controller = new AbortController();
-          const timeoutId = setTimeout(() => controller.abort(), timeout);
+          const timeoutId = setTimeout(() => {
+            controller.abort();
+            console.log('Request timed out after', timeout, 'ms');
+          }, timeout);
 
           try {
             const response = await fetch(url, {
@@ -143,6 +113,20 @@ export default function Dashboard() {
             return response;
           } catch (error) {
             clearTimeout(timeoutId);
+
+            // Check if this was a timeout error
+            if (error instanceof Error && error.name === 'AbortError') {
+              console.error('Request timed out:', url);
+              throw new Error('The request timed out. The server might be busy processing your video. Please try again with a shorter video or a more specific request.');
+            }
+
+            // Retry logic
+            if (retries > 0) {
+              console.log(`Retrying request to ${url}, ${retries} attempts left`);
+              await new Promise(resolve => setTimeout(resolve, 1000));
+              return fetchWithTimeout(url, options, timeout, retries - 1);
+            }
+
             console.error('Fetch error with timeout:', error);
             throw error;
           }
@@ -218,6 +202,18 @@ export default function Dashboard() {
 
   return (
     <div className="max-w-5xl mx-auto py-8 px-4">
+      {/* Logo at the top center */}
+      <div className="flex justify-center mb-8">
+        <Image
+          src="/logo.png"
+          alt="YouTube Analyzer Logo"
+          width={200}
+          height={80}
+          className="h-20 w-auto"
+          priority
+        />
+      </div>
+
       <main className="space-y-8">
         <div className="space-y-4 rounded-lg border bg-card text-card-foreground shadow-sm p-6">
 

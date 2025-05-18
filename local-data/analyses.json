@@ -8,6 +8,15 @@
       "userId": "local-user-id",
       "createdAt": "2025-05-18T00:22:11.550Z",
       "updatedAt": "2025-05-18T00:22:11.550Z"
+    },
+    {
+      "id": "a37b6630-624c-487d-a887-d9e6b9365c66",
+      "videoId": "Dv4qLJcxus8",
+      "videoTitle": "Untitled Video",
+      "analysis": "The transcript describes the bubble sort algorithm and explains its implementation in code, but it doesn't contain a visual representation (screenshot) of a bubble sort in action.  The video mentions showing a manual bubble sort at [1:47], but the transcript lacks details of what is visually shown at that point.  Therefore, I cannot fulfill the user's request for a timestamp and screen of a bubble sort representation.  To get the requested information, the user would need to watch the video at the timestamp [1:47] and take a screenshot themselves.\n",
+      "userId": "local-user-id",
+      "createdAt": "2025-05-18T01:02:45.149Z",
+      "updatedAt": "2025-05-18T01:02:45.149Z"
     }
   ]
 }

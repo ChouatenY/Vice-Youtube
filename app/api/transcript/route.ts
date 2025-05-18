@@ -26,21 +26,49 @@ export async function POST(request: NextRequest) {
 
     const videoId = videoIdMatch[1];
 
-    // Initialize Innertube
-    const youtube = await Innertube.create({
+    // Initialize Innertube with timeout
+    const youtubePromise = Innertube.create({
       lang: 'en',
       location: 'US',
       retrieve_player: false,
     });
 
-    // Get video info
-    const info = await youtube.getInfo(videoId);
+    // Add timeout for Vercel serverless functions
+    const timeoutPromise = new Promise((_, reject) => {
+      setTimeout(() => {
+        reject(new Error('YouTube API initialization timed out'));
+      }, 8000); // 8 second timeout
+    });
+
+    // Race between initialization and timeout
+    const youtube = await Promise.race([youtubePromise, timeoutPromise]) as Awaited<ReturnType<typeof Innertube.create>>;
+
+    // Get video info with timeout
+    const infoPromise = youtube.getInfo(videoId);
+    const infoTimeoutPromise = new Promise((_, reject) => {
+      setTimeout(() => {
+        reject(new Error('Video info fetch timed out'));
+      }, 8000); // 8 second timeout
+    });
+
+    // Race between video info fetch and timeout
+    const info = await Promise.race([infoPromise, infoTimeoutPromise]);
 
     // Fetch transcript
     const fetchTranscript = async () => {
       try {
         console.log(`Fetching transcript for video ID: ${videoId}`);
-        const transcriptData = await info.getTranscript();
+
+        // Add timeout for transcript fetch
+        const transcriptPromise = info.getTranscript();
+        const transcriptTimeoutPromise = new Promise((_, reject) => {
+          setTimeout(() => {
+            reject(new Error('Transcript fetch timed out'));
+          }, 8000); // 8 second timeout
+        });
+
+        // Race between transcript fetch and timeout
+        const transcriptData = await Promise.race([transcriptPromise, transcriptTimeoutPromise]);
 
         if (!transcriptData || !transcriptData.transcript || !transcriptData.transcript.content || !transcriptData.transcript.content.body || !transcriptData.transcript.content.body.initial_segments) {
           console.error('Invalid transcript data structure:', JSON.stringify(transcriptData, null, 2));
@@ -60,7 +88,17 @@ export async function POST(request: NextRequest) {
         // Try alternative method if available
         try {
           console.log('Attempting to fetch captions as fallback...');
-          const captions = await youtube.getTranscript(videoId);
+
+          // Add timeout for captions fetch
+          const captionsPromise = youtube.getTranscript(videoId);
+          const captionsTimeoutPromise = new Promise((_, reject) => {
+            setTimeout(() => {
+              reject(new Error('Captions fetch timed out'));
+            }, 8000); // 8 second timeout
+          });
+
+          // Race between captions fetch and timeout
+          const captions = await Promise.race([captionsPromise, captionsTimeoutPromise]);
 
           if (!captions || captions.length === 0) {
             throw new Error('No captions available');

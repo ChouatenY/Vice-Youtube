@@ -32,15 +32,22 @@ export function LocalUserProvider({ children }: { children: React.ReactNode }) {
       try {
         // Check if we have a user ID in local storage
         if (typeof window !== 'undefined') {
-          // Store the user ID in local storage if it doesn't exist
+          // Generate a persistent user ID if it doesn't exist
           if (!localStorage.getItem('localUserId')) {
-            localStorage.setItem('localUserId', DEFAULT_USER.id);
+            // Generate a unique ID that will persist across sessions
+            const uniqueId = 'user-' + Math.random().toString(36).substring(2, 15) +
+                             Math.random().toString(36).substring(2, 15);
+            localStorage.setItem('localUserId', uniqueId);
+            console.log('Created new persistent user ID:', uniqueId);
           }
+
+          const storedUserId = localStorage.getItem('localUserId');
+          console.log('Using stored user ID from localStorage:', storedUserId);
 
           // Use the default user with the ID from local storage
           const localUser = {
             ...DEFAULT_USER,
-            id: localStorage.getItem('localUserId') || DEFAULT_USER.id
+            id: storedUserId || DEFAULT_USER.id
           };
 
           setUser(localUser);
@@ -48,6 +55,7 @@ export function LocalUserProvider({ children }: { children: React.ReactNode }) {
         } else {
           // Fallback for server-side rendering
           setUser(DEFAULT_USER);
+          console.log('Server-side rendering, using default user');
         }
       } catch (error) {
         console.error('Error initializing local user:', error);
