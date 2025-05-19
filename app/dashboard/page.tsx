@@ -158,7 +158,7 @@ export default function Dashboard() {
             }
 
             console.error('API error response:', errorData);
-            throw new Error(errorData.details || errorData.error || `Server responded with status ${analysisResponse.status}`);
+            throw new Error((errorData as {details?: string, error?: string}).details || (errorData as {details?: string, error?: string}).error || `Server responded with status ${analysisResponse.status}`);
           }
 
           let analysisData;
