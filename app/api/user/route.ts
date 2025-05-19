@@ -2,7 +2,34 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { LOCAL_USER_ID } from '@/lib/local-user';
-import { initializeLocalUser } from '@/lib/api-actions';
+
+// Helper function to initialize user if needed
+async function ensureUserExists(userId: string) {
+  try {
+    const user = await prisma.user.findUnique({
+      where: { id: userId }
+    });
+
+    if (!user) {
+      console.log('User not found, creating with ID:', userId);
+      await prisma.user.create({
+        data: {
+          id: userId,
+          email: `${userId}@example.com`,
+          name: 'Local User'
+        }
+      });
+      console.log('User created successfully');
+    } else {
+      console.log('User already exists with ID:', userId);
+    }
+
+    return true;
+  } catch (error) {
+    console.error('Error ensuring user exists:', error);
+    throw error;
+  }
+}
 
 export async function GET(request: Request) {
   try {
@@ -16,7 +43,7 @@ export async function GET(request: Request) {
     const userIdToUse = userId || LOCAL_USER_ID;
 
     // Initialize the user if it doesn't exist
-    await initializeLocalUser(userIdToUse);
+    await ensureUserExists(userIdToUse);
 
     const user = await prisma.user.findUnique({
       where: { id: userIdToUse }

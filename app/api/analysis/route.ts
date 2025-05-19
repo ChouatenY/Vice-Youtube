@@ -1,9 +1,29 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { saveAnalysis, getAnalyses } from '@/lib/api-actions';
+import { prisma } from '@/lib/prisma';
+import { LOCAL_USER_ID } from '@/lib/local-user';
+
+// Helper function to initialize user if needed
+async function ensureUserExists(userId: string) {
+  const user = await prisma.user.findUnique({
+    where: { id: userId }
+  });
+
+  if (!user) {
+    await prisma.user.create({
+      data: {
+        id: userId,
+        email: `${userId}@example.com`,
+        name: 'Local User'
+      }
+    });
+  }
+
+  return true;
+}
 
 export async function POST(request: NextRequest) {
   try {
-    const { videoId, videoTitle, analysis, userId } = await request.json();
+    const { videoId, videoTitle, analysis, userId = LOCAL_USER_ID } = await request.json();
 
     if (!videoId || !analysis) {
       return NextResponse.json(
@@ -12,11 +32,25 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    console.log('User ID from request body:', userId || 'Not provided');
+    console.log('User ID from request body:', userId);
 
-    // Use the server action to save the analysis with the user ID if provided
-    const result = await saveAnalysis(videoId, videoTitle || null, analysis, userId || undefined);
-    return NextResponse.json(result);
+    // Ensure user exists
+    await ensureUserExists(userId);
+
+    // Save the analysis to the database
+    const savedAnalysis = await prisma.analysis.create({
+      data: {
+        videoId,
+        videoTitle: videoTitle || 'Untitled Video',
+        analysis,
+        userId
+      }
+    });
+
+    return NextResponse.json({
+      success: true,
+      analysis: savedAnalysis
+    });
   } catch (error) {
     console.error('Error saving analysis:', error);
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
@@ -35,16 +69,26 @@ export async function GET(request: NextRequest) {
 
     // Get the user ID from the query parameters
     const searchParams = request.nextUrl.searchParams;
-    const userId = searchParams.get('userId');
+    const userId = searchParams.get('userId') || LOCAL_USER_ID;
 
-    console.log('User ID from query parameters:', userId || 'Not provided');
+    console.log('User ID from query parameters:', userId);
 
-    // Use the server action to get analyses with the user ID if provided
-    console.log('Calling getAnalyses server action with userId:', userId || 'undefined');
-    const result = await getAnalyses(userId || undefined);
-    console.log('Server action completed successfully, result:', JSON.stringify(result));
+    // Ensure user exists
+    await ensureUserExists(userId);
 
-    return NextResponse.json(result);
+    // Get all analyses for the user
+    const analyses = await prisma.analysis.findMany({
+      where: {
+        userId
+      },
+      orderBy: {
+        createdAt: 'desc'
+      }
+    });
+
+    console.log(`Found ${analyses.length} analyses for user ${userId}`);
+
+    return NextResponse.json({ analyses });
   } catch (error) {
     console.error('Error in GET /api/analysis:', error);
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';

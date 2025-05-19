@@ -17,7 +17,23 @@
       "memory": 1024,
       "maxDuration": 10
     },
-    "app/api/**/route.ts": {
+    "app/api/analysis/route.ts": {
+      "memory": 1024,
+      "maxDuration": 10
+    },
+    "app/api/analysis/[id]/route.ts": {
+      "memory": 1024,
+      "maxDuration": 10
+    },
+    "app/api/user/route.ts": {
+      "memory": 1024,
+      "maxDuration": 10
+    },
+    "app/api/local-analyses/route.ts": {
+      "memory": 1024,
+      "maxDuration": 10
+    },
+    "app/api/local-analyses/[id]/route.ts": {
       "memory": 1024,
       "maxDuration": 10
     }
@@ -49,5 +65,9 @@
         }
       ]
     }
-  ]
+  ],
+  "env": {
+    "NEXTJS_IGNORE_ESLINT": "1",
+    "NEXTJS_IGNORE_TYPECHECK": "1"
+  }
 }

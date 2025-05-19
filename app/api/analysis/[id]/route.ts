@@ -1,5 +1,25 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { updateAnalysis, deleteAnalysis, getAnalysisById } from '@/lib/api-actions';
+import { prisma } from '@/lib/prisma';
+import { LOCAL_USER_ID } from '@/lib/local-user';
+
+// Helper function to initialize user if needed
+async function ensureUserExists(userId: string) {
+  const user = await prisma.user.findUnique({
+    where: { id: userId }
+  });
+
+  if (!user) {
+    await prisma.user.create({
+      data: {
+        id: userId,
+        email: `${userId}@example.com`,
+        name: 'Local User'
+      }
+    });
+  }
+
+  return true;
+}
 
 export async function PUT(
   request: NextRequest,
@@ -18,13 +38,42 @@ export async function PUT(
 
     // Get the user ID from the query parameters
     const searchParams = request.nextUrl.searchParams;
-    const userId = searchParams.get('userId');
+    const userId = searchParams.get('userId') || LOCAL_USER_ID;
 
-    console.log('User ID from query parameters:', userId || 'Not provided');
+    console.log('User ID from query parameters:', userId);
 
-    // Use the server action to update the analysis with the user ID if provided
-    const result = await updateAnalysis(id, analysis, userId || undefined);
-    return NextResponse.json(result);
+    // Ensure user exists
+    await ensureUserExists(userId);
+
+    // Check if the analysis belongs to the user
+    const existingAnalysis = await prisma.analysis.findUnique({
+      where: { id }
+    });
+
+    if (!existingAnalysis) {
+      return NextResponse.json(
+        { error: 'Analysis not found' },
+        { status: 404 }
+      );
+    }
+
+    if (existingAnalysis.userId !== userId) {
+      return NextResponse.json(
+        { error: 'Unauthorized' },
+        { status: 403 }
+      );
+    }
+
+    // Update the analysis
+    const updatedAnalysis = await prisma.analysis.update({
+      where: { id },
+      data: { analysis }
+    });
+
+    return NextResponse.json({
+      success: true,
+      analysis: updatedAnalysis
+    });
   } catch (error) {
     console.error('Error updating analysis:', error);
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
@@ -45,13 +94,38 @@ export async function DELETE(
 
     // Get the user ID from the query parameters
     const searchParams = request.nextUrl.searchParams;
-    const userId = searchParams.get('userId');
+    const userId = searchParams.get('userId') || LOCAL_USER_ID;
 
-    console.log('User ID from query parameters:', userId || 'Not provided');
+    console.log('User ID from query parameters:', userId);
 
-    // Use the server action to delete the analysis with the user ID if provided
-    const result = await deleteAnalysis(id, userId || undefined);
-    return NextResponse.json(result);
+    // Ensure user exists
+    await ensureUserExists(userId);
+
+    // Check if the analysis belongs to the user
+    const existingAnalysis = await prisma.analysis.findUnique({
+      where: { id }
+    });
+
+    if (!existingAnalysis) {
+      return NextResponse.json(
+        { error: 'Analysis not found' },
+        { status: 404 }
+      );
+    }
+
+    if (existingAnalysis.userId !== userId) {
+      return NextResponse.json(
+        { error: 'Unauthorized' },
+        { status: 403 }
+      );
+    }
+
+    // Delete the analysis
+    await prisma.analysis.delete({
+      where: { id }
+    });
+
+    return NextResponse.json({ success: true });
   } catch (error) {
     console.error('Error deleting analysis:', error);
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
@@ -72,13 +146,33 @@ export async function GET(
 
     // Get the user ID from the query parameters
     const searchParams = request.nextUrl.searchParams;
-    const userId = searchParams.get('userId');
+    const userId = searchParams.get('userId') || LOCAL_USER_ID;
 
-    console.log('User ID from query parameters:', userId || 'Not provided');
+    console.log('User ID from query parameters:', userId);
 
-    // Use the server action to get a specific analysis with the user ID if provided
-    const result = await getAnalysisById(id, userId || undefined);
-    return NextResponse.json(result);
+    // Ensure user exists
+    await ensureUserExists(userId);
+
+    // Get the specific analysis
+    const analysis = await prisma.analysis.findUnique({
+      where: { id }
+    });
+
+    if (!analysis) {
+      return NextResponse.json(
+        { error: 'Analysis not found' },
+        { status: 404 }
+      );
+    }
+
+    if (analysis.userId !== userId) {
+      return NextResponse.json(
+        { error: 'Unauthorized' },
+        { status: 403 }
+      );
+    }
+
+    return NextResponse.json({ analysis });
   } catch (error) {
     console.error('Error fetching analysis:', error);
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
