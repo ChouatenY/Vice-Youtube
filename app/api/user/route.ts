@@ -2,7 +2,7 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { LOCAL_USER_ID } from '@/lib/local-user';
-import { initializeLocalUser } from '@/lib/server-actions';
+import { initializeLocalUser } from '@/lib/api-actions';
 
 export async function GET(request: Request) {
   try {

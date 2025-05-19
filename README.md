@@ -19,6 +19,7 @@ A modern web application built with Next.js that extracts and analyzes YouTube v
 - Node.js 18.x or later
 - npm or yarn
 - Google Gemini API key
+- PostgreSQL database
 
 ### Installation
 
@@ -40,7 +41,7 @@ yarn install
 3. Create a `.env.local` file in the root directory and add your Gemini API key:
 
 ```
-GEMINI_API_KEY=your_gemini_api_key_here
+GOOGLE_API_KEY=your_gemini_api_key_here
 DATABASE_URL=your_database_url_here
 DIRECT_URL=your_direct_database_url_here
 ```
@@ -58,6 +59,35 @@ yarn dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000) in your browser to see the application.
+
+## Deployment on Vercel
+
+### Prerequisites
+
+1. A Vercel account
+2. A PostgreSQL database (e.g., Vercel Postgres, Supabase, or any other provider)
+3. A Google API key with access to the Gemini API
+
+### Environment Variables
+
+Set the following environment variables in your Vercel project:
+
+```
+# Database
+DATABASE_URL=postgresql://username:password@host:port/database
+DIRECT_URL=postgresql://username:password@host:port/database
+
+# Google API
+GOOGLE_API_KEY=your_google_api_key
+```
+
+### Important Notes for Vercel Deployment
+
+1. **API Timeouts**: The application is configured to work within Vercel's free tier 10-second function timeout limit. If you're analyzing long videos or experiencing timeouts, consider upgrading to a paid plan or optimizing your requests.
+
+2. **Database Connection**: Make sure both `DATABASE_URL` and `DIRECT_URL` are properly configured for Prisma to work correctly on Vercel.
+
+3. **Vercel Configuration**: The project includes a `vercel.json` file that configures the serverless functions for optimal performance.
 
 ### Build for Production
 

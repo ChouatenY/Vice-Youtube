@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { updateAnalysis, deleteAnalysis, getAnalysisById } from '@/lib/server-actions';
+import { updateAnalysis, deleteAnalysis, getAnalysisById } from '@/lib/api-actions';
 
 export async function PUT(
   request: NextRequest,
