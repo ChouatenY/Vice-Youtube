@@ -1,5 +1,3 @@
-'use server';
-
 import { NextRequest, NextResponse } from 'next/server';
 import { updateAnalysis, deleteAnalysis, getAnalysisById } from '@/lib/server-actions';
 
