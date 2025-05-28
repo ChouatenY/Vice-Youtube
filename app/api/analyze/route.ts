@@ -23,16 +23,16 @@ export async function POST(request: NextRequest) {
     const transcriptLength = transcript.length;
     console.log(`Processing transcript with ${transcriptLength} segments`);
 
-    // Check if Gemini API key is available
-    if (!process.env.GEMINI_API_KEY) {
-      console.error('GEMINI_API_KEY is not set in environment variables');
+    // Check if Google API key is available
+    if (!process.env.GOOGLE_API_KEY) {
+      console.error('GOOGLE_API_KEY is not set in environment variables');
       return NextResponse.json(
         { error: 'API key configuration error' },
         { status: 500 }
       );
     }
 
-    console.log('Using Gemini API with key:', process.env.GEMINI_API_KEY.substring(0, 5) + '...');
+    console.log('Using Google API with key:', process.env.GOOGLE_API_KEY.substring(0, 5) + '...');
 
     // Determine the prompt based on whether there's a specific request
     let promptText;
@@ -114,7 +114,7 @@ ${transcriptWithTimestamps}`;
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'x-goog-api-key': process.env.GEMINI_API_KEY
+            'x-goog-api-key': process.env.GOOGLE_API_KEY
           },
           body: JSON.stringify({
             contents: [

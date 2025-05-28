@@ -13,7 +13,7 @@ export async function fetchAnalyses() {
     console.log('User ID from local storage:', userId);
 
     // Add the user ID as a query parameter if available
-    const url = userId ? `/api/v2/analysis?userId=${userId}` : '/api/v2/analysis';
+    const url = userId ? `/api/local-analyses?userId=${userId}` : '/api/local-analyses';
     console.log('Fetching analyses with URL:', url);
 
     const response = await fetch(url);
@@ -49,7 +49,7 @@ export async function saveAnalysis(videoId: string, videoTitle: string | null, a
     const userId = typeof window !== 'undefined' ? localStorage.getItem('localUserId') : null;
     console.log('User ID from local storage:', userId);
 
-    const response = await fetch('/api/v2/analysis', {
+    const response = await fetch('/api/local-analyses', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -90,7 +90,7 @@ export async function deleteAnalysis(id: string) {
     console.log('User ID from local storage:', userId);
 
     // Add the user ID as a query parameter if available
-    const url = userId ? `/api/v2/analysis/${id}?userId=${userId}` : `/api/v2/analysis/${id}`;
+    const url = userId ? `/api/local-analyses/${id}?userId=${userId}` : `/api/local-analyses/${id}`;
     console.log('Deleting analysis with URL:', url);
 
     const response = await fetch(url, {
@@ -130,7 +130,7 @@ export async function updateAnalysis(id: string, analysis: string) {
     console.log('User ID from local storage:', userId);
 
     // Add the user ID as a query parameter if available
-    const url = userId ? `/api/v2/analysis/${id}?userId=${userId}` : `/api/v2/analysis/${id}`;
+    const url = userId ? `/api/local-analyses/${id}?userId=${userId}` : `/api/local-analyses/${id}`;
     console.log('Updating analysis with URL:', url);
 
     const response = await fetch(url, {

@@ -17,15 +17,11 @@
       "memory": 1024,
       "maxDuration": 10
     },
-    "app/api/v2/analysis/route.ts": {
+    "app/api/local-analyses/route.ts": {
       "memory": 1024,
       "maxDuration": 10
     },
-    "app/api/v2/analysis/[id]/route.ts": {
-      "memory": 1024,
-      "maxDuration": 10
-    },
-    "app/api/v2/user/route.ts": {
+    "app/api/local-analyses/[id]/route.ts": {
       "memory": 1024,
       "maxDuration": 10
     }
