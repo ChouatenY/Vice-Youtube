@@ -105,6 +105,43 @@ yarn build
 4. Read the AI-generated analysis of the video content
 5. Click "Analyze Another Video" to start over
 
+## Iframe Embedding
+
+This application is designed to be embedded in iframes. You can embed it in your own projects using:
+
+### Basic Embedding
+```html
+<iframe
+  src="https://your-deployment-url.vercel.app/dashboard"
+  width="100%"
+  height="800px"
+  frameborder="0"
+  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+  allowfullscreen>
+</iframe>
+```
+
+### Dedicated Embed Route
+For a cleaner iframe experience, use the dedicated embed route:
+```html
+<iframe
+  src="https://your-deployment-url.vercel.app/embed"
+  width="100%"
+  height="800px"
+  frameborder="0"
+  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+  allowfullscreen>
+</iframe>
+```
+
+### Features for Iframe Embedding
+- ✅ **X-Frame-Options**: Set to `ALLOWALL` to allow embedding from any domain
+- ✅ **Content Security Policy**: Configured with `frame-ancestors *;`
+- ✅ **Responsive Design**: Automatically adjusts to iframe dimensions
+- ✅ **Cross-Origin Support**: CORS headers configured for iframe communication
+- ✅ **Iframe Detection**: Automatically detects when running in iframe and adjusts layout
+- ✅ **Dedicated Embed Route**: `/embed` route optimized for iframe usage
+
 ## Technologies Used
 
 - Next.js 15
