@@ -1,50 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import fs from 'fs';
-import path from 'path';
-import { v4 as uuidv4 } from 'uuid';
-
-// Define the path to the local JSON file
-const DATA_FILE = path.join(process.cwd(), 'local-data', 'analyses.json');
-
-// Ensure the directory exists
-const ensureDirectoryExists = () => {
-  const dir = path.dirname(DATA_FILE);
-  if (!fs.existsSync(dir)) {
-    fs.mkdirSync(dir, { recursive: true });
-  }
-};
-
-// Read data from the file
-const readData = () => {
-  ensureDirectoryExists();
-
-  if (!fs.existsSync(DATA_FILE)) {
-    // Create an empty file if it doesn't exist
-    fs.writeFileSync(DATA_FILE, JSON.stringify({ analyses: [] }));
-    return { analyses: [] };
-  }
-
-  try {
-    const data = fs.readFileSync(DATA_FILE, 'utf8');
-    return JSON.parse(data);
-  } catch (error) {
-    console.error('Error reading data file:', error);
-    return { analyses: [] };
-  }
-};
-
-// Write data to the file
-const writeData = (data: any) => {
-  ensureDirectoryExists();
-
-  try {
-    fs.writeFileSync(DATA_FILE, JSON.stringify(data, null, 2));
-    return true;
-  } catch (error) {
-    console.error('Error writing data file:', error);
-    return false;
-  }
-};
+import { prisma } from '@/lib/prisma';
 
 // GET handler to fetch all analyses
 export async function GET(request: NextRequest) {
@@ -57,11 +12,28 @@ export async function GET(request: NextRequest) {
 
     console.log('User ID from query parameters:', userId);
 
-    // Read data from the file
-    const data = readData();
+    // First, ensure the user exists in the database
+    let user = await prisma.user.findUnique({
+      where: { id: userId }
+    });
 
-    // Filter analyses by user ID
-    const userAnalyses = data.analyses.filter((analysis: any) => analysis.userId === userId);
+    if (!user) {
+      // Create the user if they don't exist
+      user = await prisma.user.create({
+        data: {
+          id: userId,
+          email: `${userId}@local.dev`,
+          name: 'Local User'
+        }
+      });
+      console.log('Created new user:', user.id);
+    }
+
+    // Fetch analyses for this user
+    const userAnalyses = await prisma.analysis.findMany({
+      where: { userId: userId },
+      orderBy: { createdAt: 'desc' }
+    });
 
     console.log(`Found ${userAnalyses.length} analyses for user ${userId}`);
 
@@ -91,29 +63,36 @@ export async function POST(request: NextRequest) {
 
     console.log('Creating analysis for user:', userId);
 
-    // Read existing data
-    const data = readData();
+    // First, ensure the user exists in the database
+    let user = await prisma.user.findUnique({
+      where: { id: userId }
+    });
 
-    // Create a new analysis
-    const newAnalysis = {
-      id: uuidv4(),
-      videoId,
-      videoTitle: videoTitle || 'Untitled Video',
-      analysis,
-      userId,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
-    };
-
-    // Add the new analysis
-    data.analyses.push(newAnalysis);
-
-    // Write the updated data
-    if (writeData(data)) {
-      return NextResponse.json({ success: true, analysis: newAnalysis });
-    } else {
-      throw new Error('Failed to write data to file');
+    if (!user) {
+      // Create the user if they don't exist
+      user = await prisma.user.create({
+        data: {
+          id: userId,
+          email: `${userId}@local.dev`,
+          name: 'Local User'
+        }
+      });
+      console.log('Created new user:', user.id);
     }
+
+    // Create the analysis in the database
+    const newAnalysis = await prisma.analysis.create({
+      data: {
+        videoId,
+        videoTitle: videoTitle || 'Untitled Video',
+        analysis,
+        userId
+      }
+    });
+
+    console.log('Analysis created successfully:', newAnalysis.id);
+
+    return NextResponse.json({ success: true, analysis: newAnalysis });
   } catch (error) {
     console.error('Error creating analysis:', error);
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';

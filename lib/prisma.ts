@@ -1,5 +1,3 @@
-'use server';
-
 import { PrismaClient } from '@prisma/client';
 // PrismaClient is attached to the `global` object in development to prevent
 // exhausting your database connection limit.
@@ -21,9 +19,8 @@ export const prisma = globalForPrisma.prisma || new PrismaClient({
 });
 
 // Attach to global object in development
-
-  console.log('Development environment detected, attaching Prisma to global object');
 if (process.env.NODE_ENV !== 'production') {
+  console.log('Development environment detected, attaching Prisma to global object');
   globalForPrisma.prisma = prisma;
 }
 

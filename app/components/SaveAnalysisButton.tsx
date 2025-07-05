@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { useLocalUser } from '@/lib/local-user-context';
 import { saveAnalysis } from '@/lib/client-actions';
+import { Button } from '@/components/ui/button';
+import { Save, Check, Loader2 } from 'lucide-react';
 
 interface SaveAnalysisButtonProps {
   videoId: string;
@@ -37,20 +39,32 @@ export default function SaveAnalysisButton({ videoId, analysis, onSaved }: SaveA
   };
 
   return (
-    <button
+    <Button
       onClick={handleSave}
       disabled={isSaving}
-      className={`inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 h-10 px-4 py-2 ${
+      variant={isSuccess ? "default" : "default"}
+      className={`gap-2 transition-all duration-200 ${
         isSuccess
-          ? 'bg-green-600 text-white hover:bg-green-700'
-          : 'bg-primary text-primary-foreground hover:bg-primary/90'
+          ? 'bg-green-600 hover:bg-green-700 text-white'
+          : ''
       }`}
     >
-      {isSuccess
-        ? 'Saved!'
-        : isSaving
-        ? 'Saving...'
-        : 'Save Analysis'}
-    </button>
+      {isSuccess ? (
+        <>
+          <Check className="h-4 w-4" />
+          Saved!
+        </>
+      ) : isSaving ? (
+        <>
+          <Loader2 className="h-4 w-4 animate-spin" />
+          Saving...
+        </>
+      ) : (
+        <>
+          <Save className="h-4 w-4" />
+          Save Analysis
+        </>
+      )}
+    </Button>
   );
 }

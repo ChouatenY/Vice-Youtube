@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import { useLocalUser } from '@/lib/local-user-context';
 import AnalysisModal from './AnalysisModal';
 import { fetchAnalyses, deleteAnalysis, updateAnalysis } from '@/lib/client-actions';
+import { Button } from '@/components/ui/button';
+import { RefreshCw, Calendar, Video, Trash2, Eye } from 'lucide-react';
 
 interface Analysis {
   id: string;
@@ -132,69 +134,144 @@ export default function SavedAnalysesList() {
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <button
+        <div className="flex items-center gap-2">
+          <div className="h-2 w-2 bg-primary rounded-full animate-pulse"></div>
+          <span className="text-sm font-medium text-muted-foreground">
+            {analyses.length} saved {analyses.length === 1 ? 'analysis' : 'analyses'}
+          </span>
+        </div>
+        <Button
           onClick={getAnalysesData}
-          className="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-9 px-3"
+          variant="outline"
+          size="sm"
+          disabled={isLoading}
+          className="gap-2"
         >
+          <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
           Refresh
-        </button>
+        </Button>
       </div>
 
       {isLoading ? (
-        <div className="animate-pulse space-y-4">
+        <div className="space-y-4">
           {[1, 2, 3].map(i => (
-            <div key={i} className="h-24 bg-secondary rounded-lg"></div>
+            <div key={i} className="animate-pulse">
+              <div className="rounded-lg border bg-card p-6 space-y-3">
+                <div className="flex justify-between items-start">
+                  <div className="space-y-2 flex-1">
+                    <div className="h-5 bg-muted rounded w-3/4"></div>
+                    <div className="h-4 bg-muted rounded w-1/2"></div>
+                  </div>
+                  <div className="h-8 w-16 bg-muted rounded"></div>
+                </div>
+                <div className="space-y-2">
+                  <div className="h-4 bg-muted rounded w-full"></div>
+                  <div className="h-4 bg-muted rounded w-2/3"></div>
+                </div>
+              </div>
+            </div>
           ))}
         </div>
       ) : fetchError ? (
-        <div className="p-4 bg-red-100 text-red-700 rounded mb-4">
-          <p className="font-bold">Error fetching analyses:</p>
-          <p>{fetchError}</p>
-          <button
-            onClick={getAnalysesData}
-            className="mt-2 px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700 text-sm"
-          >
-            Try Again
-          </button>
+        <div className="rounded-lg border border-destructive/20 bg-destructive/5 p-6 text-center">
+          <div className="space-y-3">
+            <div className="text-destructive font-semibold">Error fetching analyses</div>
+            <p className="text-sm text-muted-foreground">{fetchError}</p>
+            <Button
+              onClick={getAnalysesData}
+              variant="destructive"
+              size="sm"
+              className="gap-2"
+            >
+              <RefreshCw className="h-4 w-4" />
+              Try Again
+            </Button>
+          </div>
         </div>
       ) : analyses.length === 0 ? (
-        <p className="text-card-foreground/70 text-center py-6">
-          You haven't saved any analyses yet.
-        </p>
+        <div className="text-center py-12">
+          <Video className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+          <h3 className="text-lg font-semibold text-foreground mb-2">No saved analyses yet</h3>
+          <p className="text-muted-foreground">
+            Analyze a YouTube video and save it to see your analyses here.
+          </p>
+        </div>
       ) : (
-        <div className="space-y-4">
+        <div className="grid gap-4">
           {analyses.map(analysis => (
             <div
               key={analysis.id}
-              className="p-4 bg-background rounded-lg border border-input hover:border-primary/50 transition-colors cursor-pointer"
-              onClick={() => handleOpenModal(analysis)}
+              className="group rounded-lg border bg-card hover:bg-accent/5 transition-all duration-200 hover:shadow-md hover:border-primary/20"
             >
-              <div className="flex justify-between items-start">
-                <div>
-                  <h3 className="font-medium">
-                    {analysis.videoTitle || 'Untitled Video'}
-                  </h3>
-                  <p className="text-sm text-card-foreground/60 mt-1">
-                    {new Date(analysis.createdAt).toLocaleDateString()} • Video ID: {analysis.videoId}
-                  </p>
+              <div className="p-6">
+                <div className="flex justify-between items-start mb-4">
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-semibold text-lg text-foreground mb-2 truncate">
+                      {analysis.videoTitle || 'Untitled Video'}
+                    </h3>
+                    <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                      <div className="flex items-center gap-1">
+                        <Calendar className="h-4 w-4" />
+                        {new Date(analysis.createdAt).toLocaleDateString('en-US', {
+                          year: 'numeric',
+                          month: 'short',
+                          day: 'numeric'
+                        })}
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <Video className="h-4 w-4" />
+                        <span className="font-mono text-xs">{analysis.videoId}</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2 ml-4">
+                    <Button
+                      onClick={() => handleOpenModal(analysis)}
+                      variant="outline"
+                      size="sm"
+                      className="gap-2 opacity-0 group-hover:opacity-100 transition-opacity"
+                    >
+                      <Eye className="h-4 w-4" />
+                      View
+                    </Button>
+                    <Button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDelete(analysis.id);
+                      }}
+                      variant="outline"
+                      size="sm"
+                      className="gap-2 text-destructive hover:text-destructive hover:bg-destructive/10 opacity-0 group-hover:opacity-100 transition-opacity"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                      Delete
+                    </Button>
+                  </div>
                 </div>
-                <div className="flex space-x-2">
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleDelete(analysis.id);
-                    }}
-                    className="p-1 text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300"
-                  >
-                    Delete
-                  </button>
+
+                <div
+                  className="cursor-pointer"
+                  onClick={() => handleOpenModal(analysis)}
+                >
+                  <div className="prose prose-sm max-w-none">
+                    <p className="text-muted-foreground line-clamp-3 leading-relaxed">
+                      {analysis.analysis.substring(0, 200)}
+                      {analysis.analysis.length > 200 && '...'}
+                    </p>
+                  </div>
+
+                  <div className="mt-4 pt-4 border-t border-border/50">
+                    <div className="flex items-center justify-between text-xs text-muted-foreground">
+                      <span>Click to view full analysis</span>
+                      <span className="opacity-0 group-hover:opacity-100 transition-opacity">
+                        Last updated {new Date(analysis.updatedAt).toLocaleDateString()}
+                      </span>
+                    </div>
+                  </div>
                 </div>
               </div>
-              <p className="text-card-foreground/70 mt-2 line-clamp-2">
-                {analysis.analysis.substring(0, 150)}...
-              </p>
             </div>
           ))}
         </div>
