@@ -4,6 +4,7 @@ import AnalysisModal from './AnalysisModal';
 import { fetchAnalyses, deleteAnalysis, updateAnalysis } from '@/lib/client-actions';
 import { Button } from '@/components/ui/button';
 import { RefreshCw, Calendar, Video, Trash2, Eye } from 'lucide-react';
+import toast from 'react-hot-toast';
 
 interface Analysis {
   id: string;
@@ -82,13 +83,26 @@ export default function SavedAnalysesList() {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this analysis?')) {
+    const analysis = analyses.find(a => a.id === id);
+    const title = analysis?.videoTitle || 'Untitled Video';
+
+    if (!confirm(`Are you sure you want to delete the analysis for "${title}"?`)) {
       return;
     }
 
+    const deletePromise = deleteAnalysis(id);
+
+    toast.promise(
+      deletePromise,
+      {
+        loading: 'Deleting analysis...',
+        success: `Analysis for "${title}" deleted successfully`,
+        error: 'Failed to delete analysis. Please try again.',
+      }
+    );
+
     try {
-      // Use the client action to delete the analysis
-      await deleteAnalysis(id);
+      await deletePromise;
 
       // Remove the deleted analysis from the list
       setAnalyses(analyses.filter(analysis => analysis.id !== id));
@@ -99,14 +113,26 @@ export default function SavedAnalysesList() {
       }
     } catch (error) {
       console.error('Error deleting analysis:', error);
-      alert('Failed to delete analysis. Please try again.');
     }
   };
 
   const handleUpdate = async (id: string, updatedAnalysis: string) => {
+    const analysis = analyses.find(a => a.id === id);
+    const title = analysis?.videoTitle || 'Untitled Video';
+
+    const updatePromise = updateAnalysis(id, updatedAnalysis);
+
+    toast.promise(
+      updatePromise,
+      {
+        loading: 'Updating analysis...',
+        success: `Analysis for "${title}" updated successfully`,
+        error: 'Failed to update analysis. Please try again.',
+      }
+    );
+
     try {
-      // Use the client action to update the analysis
-      await updateAnalysis(id, updatedAnalysis);
+      await updatePromise;
 
       // Update the analysis in the list
       setAnalyses(
@@ -125,11 +151,8 @@ export default function SavedAnalysesList() {
           updatedAt: new Date().toISOString()
         });
       }
-
-      alert('Analysis updated successfully!');
     } catch (error) {
       console.error('Error updating analysis:', error);
-      alert('Failed to update analysis. Please try again.');
     }
   };
 

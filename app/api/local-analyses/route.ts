@@ -1,10 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
+import { prisma, isPrismaAvailable } from '@/lib/prisma';
 
 // GET handler to fetch all analyses
 export async function GET(request: NextRequest) {
   try {
     console.log('GET /api/local-analyses - Fetching analyses');
+
+    // Check if Prisma is available
+    if (!isPrismaAvailable() || !prisma) {
+      return NextResponse.json(
+        { error: 'Database not configured', details: 'DATABASE_URL environment variable is missing' },
+        { status: 500 }
+      );
+    }
 
     // Get the user ID from the query parameters
     const searchParams = request.nextUrl.searchParams;
@@ -52,6 +60,14 @@ export async function GET(request: NextRequest) {
 // POST handler to create a new analysis
 export async function POST(request: NextRequest) {
   try {
+    // Check if Prisma is available
+    if (!isPrismaAvailable() || !prisma) {
+      return NextResponse.json(
+        { error: 'Database not configured', details: 'DATABASE_URL environment variable is missing' },
+        { status: 500 }
+      );
+    }
+
     const { videoId, videoTitle, analysis, userId = 'default-user' } = await request.json();
 
     if (!videoId || !analysis) {

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
+import { prisma, isPrismaAvailable } from '@/lib/prisma';
 
 // GET handler to fetch a specific analysis
 export async function GET(
@@ -7,6 +7,14 @@ export async function GET(
   { params }: { params: { id: string } }
 ) {
   try {
+    // Check if Prisma is available
+    if (!isPrismaAvailable() || !prisma) {
+      return NextResponse.json(
+        { error: 'Database not configured', details: 'DATABASE_URL environment variable is missing' },
+        { status: 500 }
+      );
+    }
+
     const { id } = params;
     console.log(`GET /api/local-analyses/${id} - Fetching analysis`);
 

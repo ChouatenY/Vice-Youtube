@@ -65,8 +65,48 @@ Open [http://localhost:3000](http://localhost:3000) in your browser to see the a
 ### Prerequisites
 
 1. A Vercel account
-2. A PostgreSQL database (e.g., Vercel Postgres, Supabase, or any other provider)
+2. A PostgreSQL database (e.g., Neon, Vercel Postgres, Supabase, or any other provider)
 3. A Google API key with access to the Gemini API
+
+### Environment Variables Setup
+
+**IMPORTANT**: You must set these environment variables in your Vercel project settings before deployment:
+
+1. Go to your Vercel project dashboard
+2. Navigate to Settings → Environment Variables
+3. Add the following variables:
+
+```bash
+# Database Configuration
+DATABASE_URL=postgresql://username:password@host:port/database?sslmode=require
+DIRECT_URL=postgresql://username:password@host:port/database?sslmode=require
+
+# Google API Key
+GOOGLE_API_KEY=your_google_api_key_here
+```
+
+### Deployment Steps
+
+1. **Connect your repository** to Vercel
+2. **Set environment variables** as described above
+3. **Deploy** - Vercel will automatically:
+   - Install dependencies
+   - Generate Prisma client
+   - Build the Next.js application
+4. **Initialize database** (first deployment only):
+   - After successful deployment, run: `npx prisma db push` locally or use Vercel CLI
+   - This creates the required database tables
+
+### Troubleshooting
+
+**Database Connection Issues:**
+- Ensure your DATABASE_URL is correctly formatted
+- Check that your database allows connections from Vercel's IP ranges
+- Verify SSL mode is set correctly (`sslmode=require` for most providers)
+
+**API Key Issues:**
+- Verify your Google API key has Gemini API access enabled
+- Check that the API key is correctly set in Vercel environment variables
 
 ### Environment Variables
 

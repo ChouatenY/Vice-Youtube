@@ -3,6 +3,7 @@ import { useLocalUser } from '@/lib/local-user-context';
 import { saveAnalysis } from '@/lib/client-actions';
 import { Button } from '@/components/ui/button';
 import { Save, Check, Loader2 } from 'lucide-react';
+import toast from 'react-hot-toast';
 
 interface SaveAnalysisButtonProps {
   videoId: string;
@@ -19,9 +20,19 @@ export default function SaveAnalysisButton({ videoId, analysis, onSaved }: SaveA
     setIsSaving(true);
     setIsSuccess(false);
 
+    const savePromise = saveAnalysis(videoId, null, analysis);
+
+    toast.promise(
+      savePromise,
+      {
+        loading: 'Saving analysis...',
+        success: 'Analysis saved successfully!',
+        error: 'Failed to save analysis. Please try again.',
+      }
+    );
+
     try {
-      // Use the client action to save the analysis
-      await saveAnalysis(videoId, null, analysis);
+      await savePromise;
 
       setIsSuccess(true);
       onSaved();
@@ -32,7 +43,6 @@ export default function SaveAnalysisButton({ videoId, analysis, onSaved }: SaveA
       }, 3000);
     } catch (error) {
       console.error('Error saving analysis:', error);
-      alert('Failed to save analysis. Please try again.');
     } finally {
       setIsSaving(false);
     }

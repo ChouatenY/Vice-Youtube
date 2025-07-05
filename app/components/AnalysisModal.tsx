@@ -3,6 +3,7 @@ import ReactModal from 'react-modal';
 import ReactMarkdown from 'react-markdown';
 import { Button } from '@/components/ui/button';
 import { X, Edit3, Save, Trash2, Calendar, Video, ExternalLink } from 'lucide-react';
+import toast from 'react-hot-toast';
 
 interface Analysis {
   id: string;
@@ -43,7 +44,7 @@ export default function AnalysisModal({ isOpen, onClose, analysis, onUpdate, onD
 
   const handleSave = async () => {
     if (editedAnalysis.trim() === '') {
-      alert('Analysis cannot be empty');
+      toast.error('Analysis cannot be empty');
       return;
     }
 
